@@ -15,11 +15,11 @@ namespace SecretAblum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetData([FromQuery] string uid)
+        public IActionResult GetData([FromQuery] string albumId)
         {
             try
             {
-                return Ok(_userService.GetUserImages(uid));
+                return Ok(_userService.GetUserImages(albumId));
             }
             catch
             {
@@ -28,11 +28,11 @@ namespace SecretAblum.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string encryptedImg, [FromForm] string description)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string imageKey)
         {
             try
             {
-                _userService.AddImage(albumId, encryptedImg, description);
+                _userService.AddImage(albumId, seed, encryptedImg, description, "0");
                 return Ok();
             }
             catch

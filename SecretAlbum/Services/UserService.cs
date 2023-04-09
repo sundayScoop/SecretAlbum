@@ -6,8 +6,8 @@ using System.Data.SqlTypes;
 
 public interface IUserService
 {
-    List<string> GetUserImages(string id);
-    void AddImage(string userId, string newImageData, string description);
+    List<string> GetUserImages(string albumId);
+    void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
 }
 
 public class UserService : IUserService
@@ -20,19 +20,29 @@ public class UserService : IUserService
     }
 
 
-    public List<string> GetUserImages(string id)
+    public List<string> GetUserImages(string albumId)
     {
-        return _context.Entries.Where(e => e.User.Equals(id))
-            .Select(e => e.EncryptedData).ToList();
+        // return _context.Entries
+        //     .Where(e => e.AlbumId.Equals(albumId))
+        //     .Select(e => new { e.Seed, e.ImageKey, e.Description, e.EncryptedData });
+        // // .Select(e => new Entry { Seed = e.Seed, ImageKey = e.ImageKey, Description = e.Description, EncryptedData = e.EncryptedData })
+
+
+        return _context.Entries.Where(e => e.AlbumId.Equals(albumId))
+            .Select(e => e.EncryptedData)
+            .ToList();
+
     }
 
-    public void AddImage(string userId, string newImageData, string description)
+    public void AddImage(string albumId, string seed, string newImageData, string description, string imageKey)
     {
         Entry newEntry = new Entry
         {
-            User = userId,
-            EncryptedData = newImageData,
-            Description = description
+            AlbumId = albumId,
+            Description = description,
+            Seed = seed,
+            ImageKey = imageKey,
+            EncryptedData = newImageData
         };
         _context.Entries.Add(newEntry);
         _context.SaveChanges();

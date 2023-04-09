@@ -22,14 +22,14 @@
         localStorage.setItem("CVK", obj.CVK);
         localStorage.setItem("UID", obj.UID);
 
-        window.location.replace(window.location.href + "main.html");
+        window.location.replace(window.location.origin + "/main.html");
     });
 
 </script>
 <script>
-    // if (window.localStorage.getItem("CVK") !== null) {
-    //     window.location.replace(window.location.href + "main.html");
-    // }
+    if (window.localStorage.getItem("CVK") !== null) {
+        window.location.replace(window.location.origin + "/main.html");
+    }
 
     function switchDiv() {
         if (document.getElementById("login_form").style.display === "none") {
