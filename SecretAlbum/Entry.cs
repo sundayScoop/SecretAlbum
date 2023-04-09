@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PlatypusPasswords
+namespace SecretAblum
 {
     public class Entry
     {
@@ -8,5 +8,6 @@ namespace PlatypusPasswords
         public int Id { get; set; }
         public string User { get; set; }
         public string EncryptedData { get; set; }
+        public string Description { get; set; }
     }
 }

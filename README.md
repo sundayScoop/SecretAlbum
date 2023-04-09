@@ -1,6 +1,6 @@
 # PlatyPasswords
-## What is PlatyPus Passwords?
-PlatyPus Passwords, "Platy", is a proof of concept decentralized password manager that doesn't hold any encryption keys to secure users' passwords. Instead, Platy uses the Tide Enclave to authenticate and retrieve user's encryption keys, which are able to decrypt their own passwords locally.
+## What is SecretAblum?
+SecretAblum, "Platy", is a proof of concept decentralized password manager that doesn't hold any encryption keys to secure users' passwords. Instead, Platy uses the Tide Enclave to authenticate and retrieve user's encryption keys, which are able to decrypt their own passwords locally.
 
 Platy's servers NEVER have access to:
 1. The user's username or password
@@ -23,4 +23,4 @@ If you want to explore what the encrypted data looks like, install a DB explorer
 
 ## I want to learn more about how Platy Works
 There is this [video](https://clipchamp.com/watch/hB5vCvUMx8e) where I explain how Platy works, and how it uses the Tide Enclave to secure user data.
-### UPDATE: PlatyPus Passwords now has a simple UI instead of the Tide Enclave. This is due to the Heimdall SDK changing from a front and backend JS module, to just a backend JS SDK.
+### UPDATE: SecretAblum now has a simple UI instead of the Tide Enclave. This is due to the Heimdall SDK changing from a front and backend JS module, to just a backend JS SDK.

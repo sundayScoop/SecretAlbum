@@ -1,5 +1,5 @@
-using PlatypusPasswords.Helpers;
-using PlatypusPasswords.Services;
+using SecretAblum.Helpers;
+using SecretAblum.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

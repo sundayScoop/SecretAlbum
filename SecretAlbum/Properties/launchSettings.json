@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "PlatypusPasswords": {
+    "SecretAblum": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

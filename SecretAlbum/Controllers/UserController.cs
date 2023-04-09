@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using PlatypusPasswords.Services;
+using SecretAblum.Services;
 
-namespace PlatypusPasswords.Controllers
+namespace SecretAblum.Controllers
 {
     public class UserController : Controller
     {
@@ -19,28 +19,28 @@ namespace PlatypusPasswords.Controllers
         {
             try
             {
-                return Ok(_userService.GetUserPasswords(uid));
+                return Ok(_userService.GetUserImages(uid));
             }
             catch
             {
                 return Ok("--FAILED--");
-            } 
+            }
         }
 
         [HttpPost]
-        public IActionResult AddData([FromQuery] string uid, [FromForm] string data)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string encryptedImg, [FromForm] string description)
         {
             try
             {
-                _userService.AddPassword(uid, data);
+                _userService.AddImage(albumId, encryptedImg, description);
                 return Ok();
             }
             catch
             {
                 return Ok("--FAILED--");
             }
-            
+
         }
-        
+
     }
 }

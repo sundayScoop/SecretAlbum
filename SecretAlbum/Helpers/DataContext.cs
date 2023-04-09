@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 
-namespace PlatypusPasswords.Helpers
+namespace SecretAblum.Helpers
 {
     public class DataContext : DbContext
     {
