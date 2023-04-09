@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using SecretAblum.Services;
+using SecretAlbum.Services;
 
-namespace SecretAblum.Controllers
+namespace SecretAlbum.Controllers
 {
     public class UserController : Controller
     {

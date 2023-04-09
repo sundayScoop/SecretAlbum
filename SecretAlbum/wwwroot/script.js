@@ -30,47 +30,7 @@ btn_account.addEventListener('click', (click) => {
 async function intialize() {
     var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
-
-    if (cvk === null || uid === null) {
-        alert("CVK/UID not found, please log in first")
-        // window.location.replace(window.location.href + "index.html");
-        localStorage.setItem("CVK", 1);
-        localStorage.setItem("UID", 1);
-        return;
-    }
-
-    cvk = BigIntToByteArray(BigInt(cvk));
-
-    // const resp = await fetch(window.location.origin + `/user/getdata?uid=${uid}`);
-    // const text = await resp.text();
-    // if (text !== "--FAILED--") {
-    //     const encryptedData = JSON.parse(text); // array of encrypted data
-
-    //     var table = document.getElementById("tbl");
-    //     var tbody = table.getElementsByTagName("tbody")[0];
-
-    //     // Loop through the data and create a new row for each item
-    //     for (var i = 0; i < encryptedData.length; i++) {
-    //         const decryptedData = await decryptData(encryptedData[i], cvk);
-    //         const decryptedObj = JSON.parse(decryptedData); // {password, website}
-
-    //         // Create a new row and cells
-    //         var row = document.createElement("tr");
-    //         var passwordCell = document.createElement("td");
-    //         var websiteCell = document.createElement("td");
-
-    //         // Set the text content of the cells to the data values
-    //         passwordCell.textContent = decryptedObj.password;
-    //         websiteCell.textContent = decryptedObj.website;
-
-    //         // Append the cells to the row
-    //         row.appendChild(passwordCell);
-    //         row.appendChild(websiteCell);
-
-    //         // Append the row to the tbody
-    //         tbody.appendChild(row);
-    //     }
-    // }
+    if (!verifyLogIn(cvk, uid)) window.location.replace(window.location.origin)
 }
 
 img_input.addEventListener("change", () => {
@@ -90,49 +50,51 @@ async function showMyAlbum() {
     cvk = BigIntToByteArray(BigInt(cvk));
     var uid = window.localStorage.getItem("UID");
 
+    if (!verifyLogIn(cvk, uid)) return
+
+    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+    const resp = await fetch(window.location.origin + `/user/getdata?albumId=${albumId}`);
+    const resp_text = await resp.text();
+    if (resp_text == "--FAILED--") {
+        alert("failed.")
+        return
+    }
+    const resp_json = JSON.parse(resp_text);
+
+    // set up the table and clear it
+    var table = document.getElementById("tbl");
+    var tbody = table.getElementsByTagName("tbody")[0];
+    while (table.rows.length > 1) table.rows[1].remove();
+
+    for (var i = 0; i < resp_json.length; i++) {
+        const entry = resp_json[i]
+
+        // Create a new row and cells
+        var row = document.createElement("tr");
+        var imageCell = document.createElement("td");
+        var descriptionCell = document.createElement("td");
+        var actionCell = document.createElement("td");
+
+        imageCell.textContent = "image";
+        descriptionCell.textContent = entry.description;
+        actionCell.textContent = "action";
+
+        row.appendChild(imageCell)
+        row.appendChild(descriptionCell)
+        row.appendChild(actionCell)
+        tbody.appendChild(row);
+    }
+}
+
+function verifyLogIn(cvk, uid) {
     if (cvk === null || uid === null) {
         alert("CVK/UID not found, please log in first")
         // window.location.replace(window.location.href + "index.html");
         localStorage.setItem("CVK", 1);
         localStorage.setItem("UID", 1);
-        return;
+        return false;
     }
-
-    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
-    console.log(albumId)
-
-    const resp = await fetch(window.location.origin + `/user/getdata?uid=${uid}`);
-    const text = await resp.text();
-    console.log(text)
-
-    // if (text !== "--FAILED--") {
-    //     const encryptedData = JSON.parse(text); // array of encrypted data
-
-    //     var table = document.getElementById("tbl");
-    //     var tbody = table.getElementsByTagName("tbody")[0];
-
-    //     // Loop through the data and create a new row for each item
-    //     for (var i = 0; i < encryptedData.length; i++) {
-    //         const decryptedData = await decryptData(encryptedData[i], cvk);
-    //         const decryptedObj = JSON.parse(decryptedData); // {password, website}
-
-    //         // Create a new row and cells
-    //         var row = document.createElement("tr");
-    //         var passwordCell = document.createElement("td");
-    //         var websiteCell = document.createElement("td");
-
-    //         // Set the text content of the cells to the data values
-    //         passwordCell.textContent = decryptedObj.password;
-    //         websiteCell.textContent = decryptedObj.website;
-
-    //         // Append the cells to the row
-    //         row.appendChild(passwordCell);
-    //         row.appendChild(websiteCell);
-
-    //         // Append the row to the tbody
-    //         tbody.appendChild(row);
-    //     }
-    // }
+    return true;
 }
 
 function processImage(img_file) {
@@ -161,26 +123,20 @@ async function upload() {
     cvk = BigIntToByteArray(BigInt(cvk));
     var uid = window.localStorage.getItem("UID");
 
-    if (cvk === null || uid === null) {
-        alert("CVK/UID not found, please log in first")
-        // window.location.replace(window.location.origin + "/index.html");
-    }
+    if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
 
     // get album Id by hashing the uid & cvk
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
-    console.log(albumId)
 
     // create image key and encrypt image
     const seed = RandomBigInt();
     const image_key = Point.g.times(seed).times(cvk)
     const image_key_byte_array = BigIntToByteArray(image_key.x)
     const encrypted_img_string = await encryptImage(ctx, image_key_byte_array);
-    console.log(encrypted_img_string)
 
     // get description
     const description_input = document.getElementById('descriptioninput')
     const description = description_input.value;
-    console.log(description)
 
     // send the image and description to the server
     const form = new FormData();

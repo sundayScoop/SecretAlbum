@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 
-namespace SecretAblum.Helpers
+namespace SecretAlbum.Helpers
 {
     public class DataContext : DbContext
     {

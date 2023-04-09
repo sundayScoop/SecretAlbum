@@ -1,12 +1,12 @@
-﻿namespace SecretAblum.Services;
+﻿namespace SecretAlbum.Services;
 
-using SecretAblum.Helpers;
-using SecretAblum;
+using SecretAlbum.Helpers;
+using SecretAlbum;
 using System.Data.SqlTypes;
 
 public interface IUserService
 {
-    List<string> GetUserImages(string albumId);
+    List<Entry> GetUserImages(string albumId);
     void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
 }
 
@@ -20,18 +20,12 @@ public class UserService : IUserService
     }
 
 
-    public List<string> GetUserImages(string albumId)
+    public List<Entry> GetUserImages(string albumId)
     {
-        // return _context.Entries
-        //     .Where(e => e.AlbumId.Equals(albumId))
-        //     .Select(e => new { e.Seed, e.ImageKey, e.Description, e.EncryptedData });
-        // // .Select(e => new Entry { Seed = e.Seed, ImageKey = e.ImageKey, Description = e.Description, EncryptedData = e.EncryptedData })
-
-
-        return _context.Entries.Where(e => e.AlbumId.Equals(albumId))
-            .Select(e => e.EncryptedData)
+        return _context.Entries
+            .Where(e => e.AlbumId.Equals(albumId))
+            .Select(e => new Entry { Id = e.Id, Seed = e.Seed, ImageKey = e.ImageKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
-
     }
 
     public void AddImage(string albumId, string seed, string newImageData, string description, string imageKey)

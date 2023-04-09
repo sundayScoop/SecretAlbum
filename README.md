@@ -1,6 +1,6 @@
-# SecretAblum
-## What is SecretAblum?
-SecretAblum is a proof of concept social media app that uses Tide Enclave to authenticate and retrive a user's Consumer-Vendor Key (CVK), which is used to craft image keys to encrypt the user's images on the client side before uploading the images to the server. This means the server, or a hacker who takes control of the server, will never have access to any image in the database unless the user chooses to share it. Each image is assigned a unique key that only the owner can generate, and the owner can make the image public by sharing this image key without compromising his/her CVK. 
+# SecretAlbum
+## What is SecretAlbum?
+SecretAlbum is a proof of concept social media app that uses Tide Enclave to authenticate and retrive a user's Consumer-Vendor Key (CVK), which is used to craft image keys to encrypt the user's images on the client side before uploading the images to the server. This means the server, or a hacker who takes control of the server, will never have access to any image in the database unless the user chooses to share it. Each image is assigned a unique key that only the owner can generate, and the owner can make the image public by sharing this image key without compromising his/her CVK. 
 
 SecretAlbum is forked from https://github.com/sundayScoop/PlatyPasswords
 

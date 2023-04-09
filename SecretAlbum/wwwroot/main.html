@@ -20,11 +20,13 @@
     }
 
     #appname {
-        margin-left: 1em;
+        margin-top: 10px;
+        margin-left: 40px;
     }
 
     .container {
-        background: #191919;
+        margin-left: 60px;
+        background: #ffffff;
         /* min-height: 100vh; */
         font-family: monospace, sans-serif;
     }
@@ -68,13 +70,17 @@
     section h2 {
         /* color: #fff; */
         font-size: 35px;
-        margin-top: 2.3em;
+        margin-top: 100px;
+        opacity: 0;
+    }
+
+    section * {
         opacity: 0;
     }
 
     /* Styles applied on trigger */
     section:target {
-        opacity: 0.9;
+        opacity: 0.98;
         position: absolute;
         left: 0;
         width: 100%;
@@ -111,8 +117,6 @@
     <title>Secret Album</title>
 </head>
 
-<img id="appname" src="images/logo.png" alt="Logo" height="60">
-
 <nav>
     <a href="#account" id="accountbtn">
         <img src="images/account.png" alt="Account" width="40" height="40">
@@ -133,8 +137,20 @@
 </nav>
 
 <div class='container'>
+    <img id="appname" src="images/logo.png" alt="Logo" height="60">
+    <br>
     <section id='account'>
         <h2>My Album</h2>
+        <table id="tbl" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </section>
 
     <section id='upload'>

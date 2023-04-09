@@ -1,13 +1,11 @@
-using SecretAblum.Helpers;
-using SecretAblum.Services;
+using SecretAlbum.Helpers;
+using SecretAlbum.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
-
-
 builder.Services.AddDbContext<DataContext>();
 builder.Services.AddScoped<IUserService, UserService>();
 

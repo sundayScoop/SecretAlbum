@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SecretAblum
+namespace SecretAlbum
 {
     public class Entry
     {
