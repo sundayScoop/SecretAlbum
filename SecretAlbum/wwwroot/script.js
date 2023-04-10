@@ -3,26 +3,25 @@ import { BigIntToByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tid
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
-const img_input = document.getElementById('imgfileinput')
-const img_output_canvas = document.getElementById('imgfileoutput')
-img_output_canvas.width = 300;
-img_output_canvas.height = 300;
-var ctx = img_output_canvas.getContext('2d');
+const imgInput = document.getElementById('imgfileinput')
+const uploadCanvas = document.getElementById('imgfileoutput')
+uploadCanvas.width = 300;
+uploadCanvas.height = 300;
 
 intialize()
 
-const btn_upload = document.getElementById('uploadbtn');
-btn_upload.addEventListener('click', upload);
+const btnUpload = document.getElementById('uploadbtn');
+btnUpload.addEventListener('click', upload);
 
-const btn_logout = document.getElementById('logoutbtn');
-btn_logout.addEventListener('click', (click) => {
+const btnLogout = document.getElementById('logoutbtn');
+btnLogout.addEventListener('click', (click) => {
     window.localStorage.removeItem("CVK");
     window.localStorage.removeItem("UID");
     window.location.replace(window.location.origin);
 });
 
-const btn_account = document.getElementById('accountbtn');
-btn_account.addEventListener('click', (click) => {
+const btnAccount = document.getElementById('accountbtn');
+btnAccount.addEventListener('click', (click) => {
     showMyAlbum();
 });
 
@@ -33,15 +32,15 @@ async function intialize() {
     if (!verifyLogIn(cvk, uid)) window.location.replace(window.location.origin)
 }
 
-img_input.addEventListener("change", () => {
-    const ctx = img_output_canvas.getContext('2d');
-    ctx.clearRect(0, 0, img_output_canvas.width, img_output_canvas.height);     // clear the canvas
-    const img_instance = processImage(img_input.files[0])                       // convert img file to an Image instance
-    img_instance.onload = function () {
-        let width = img_instance.naturalWidth;
-        let height = img_instance.naturalHeight
-        const [new_width, new_height] = resizeImage(width, height);
-        ctx.drawImage(img_instance, 0, 0, new_width, new_height);
+imgInput.addEventListener("change", () => {
+    const ctx = uploadCanvas.getContext('2d');
+    ctx.clearRect(0, 0, uploadCanvas.width, uploadCanvas.height);     // clear the canvas
+    const imgInstance = processImage(imgInput.files[0])                       // convert img file to an Image instance
+    imgInstance.onload = function () {
+        let width = imgInstance.naturalWidth;
+        let height = imgInstance.naturalHeight
+        const [newWidth, newHeight] = resizeImage(width, height);
+        ctx.drawImage(imgInstance, 0, 0, newWidth, newHeight);
     }
 })
 
@@ -54,28 +53,27 @@ async function showMyAlbum() {
 
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
     const resp = await fetch(window.location.origin + `/user/getdata?albumId=${albumId}`);
-    const resp_text = await resp.text();
-    if (resp_text == "--FAILED--") {
+    const respText = await resp.text();
+    if (respText == "--FAILED--") {
         alert("failed.")
         return
     }
-    const resp_json = JSON.parse(resp_text);
+    const respJson = JSON.parse(respText);
 
     // set up the table and clear it
     var table = document.getElementById("tbl");
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
-    for (var i = 0; i < resp_json.length; i++) {
-        const entry = resp_json[i]
+    for (var i = 0; i < respJson.length; i++) {
+        const entry = respJson[i]
 
         // Create a new row and cells
-        var row = document.createElement("tr");
-        var imageCell = document.createElement("td");
-        var descriptionCell = document.createElement("td");
-        var actionCell = document.createElement("td");
+        const row = document.createElement("tr");
+        const imageCell = document.createElement("td");
+        const descriptionCell = document.createElement("td");
+        const actionCell = document.createElement("td");
 
-        imageCell.textContent = "image";
         descriptionCell.textContent = entry.description;
         actionCell.textContent = "action";
 
@@ -83,6 +81,32 @@ async function showMyAlbum() {
         row.appendChild(descriptionCell)
         row.appendChild(actionCell)
         tbody.appendChild(row);
+
+        // prepare canvas
+        let canvas = document.createElement("canvas");
+        let canvasName = "myAlbumCanvas" + i.toString()
+        canvas.setAttribute("id", canvasName);
+        imageCell.appendChild(canvas)
+        const rowCanvas = document.getElementById(canvasName)
+        rowCanvas.width = 300;
+        rowCanvas.height = 300;
+
+        // decrypt image
+        var imageKey
+        var imageKeyByteArray
+        if (entry.imageKey == "0") {
+            imageKey = Point.g.times(BigInt(entry.seed)).times(cvk)
+            imageKeyByteArray = BigIntToByteArray(imageKey.x)
+        }
+
+        // put image on canvas
+        var ctx = rowCanvas.getContext('2d');
+        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
+        const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+
+        // draw decrypted image
+        ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
+        ctx.putImageData(imgData, 0, 0)
     }
 }
 
@@ -97,23 +121,23 @@ function verifyLogIn(cvk, uid) {
     return true;
 }
 
-function processImage(img_file) {
-    const img_url = `${URL.createObjectURL(img_file)}`
-    const img_instance = new Image(150, 150);
-    img_instance.src = img_url;
-    return img_instance;
+function processImage(imgFile) {
+    const imgUrl = `${URL.createObjectURL(imgFile)}`
+    const imgInstance = new Image(150, 150);
+    imgInstance.src = imgUrl;
+    return imgInstance;
 }
 
 function resizeImage(width, height) {
     var ratio;
     if (width < height) {
-        ratio = img_output_canvas.height / height
+        ratio = uploadCanvas.height / height
     } else {
-        ratio = img_output_canvas.width / width
+        ratio = uploadCanvas.width / width
     }
-    const new_height = height * ratio
-    const new_width = width * ratio
-    return [new_width, new_height]
+    const newHeight = height * ratio
+    const newWidth = width * ratio
+    return [newWidth, newHeight]
 }
 
 async function upload() {
@@ -130,19 +154,19 @@ async function upload() {
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    const image_key = Point.g.times(seed).times(cvk)
-    const image_key_byte_array = BigIntToByteArray(image_key.x)
-    const encrypted_img_string = await encryptImage(ctx, image_key_byte_array);
+    const imageKey = Point.g.times(seed).times(cvk)
+    const imageKeyByteArray = BigIntToByteArray(imageKey.x)
+    const encryptedImgString = await encryptImage(ctx, imageKeyByteArray);
 
     // get description
-    const description_input = document.getElementById('descriptioninput')
-    const description = description_input.value;
+    const descriptionInput = document.getElementById('descriptioninput')
+    const description = descriptionInput.value;
 
     // send the image and description to the server
     const form = new FormData();
     form.append("seed", seed)
     form.append("description", description)
-    form.append("encryptedImg", encrypted_img_string);
+    form.append("encryptedImg", encryptedImgString);
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${albumId}`, {
         method: 'POST',
         body: form
@@ -163,11 +187,29 @@ function pixelArrToString(arr) {
     return s;
 }
 
+function stringToPixelArr(s) {
+    var arr = [];
+    for (var i = 0; i < s.length; i += 3) {
+        for (var j = 0; j < 3; j++) {
+            arr.push(s.substring(i + j, i + j + 1).charCodeAt());
+        }
+        arr.push(255); // Hardcodes alpha to 255.
+    }
+    return arr;
+}
+
 async function encryptImage(ctx, cvk) {
-    var img_data = ctx.getImageData(0, 0, img_output_canvas.width, img_output_canvas.height);
-    var pixel_array = img_data.data;
-    var img_string = pixelArrToString(pixel_array);
-    return await encryptData(img_string, cvk);
+    var ctx = uploadCanvas.getContext('2d');
+    var imgData = ctx.getImageData(0, 0, uploadCanvas.width, uploadCanvas.height);
+    var pixelArray = imgData.data;
+    var imgString = pixelArrToString(pixelArray);
+    return await encryptData(imgString, cvk);
+}
+
+async function decryptImage(encryptedImg, imageKeyByteArray) {
+    var imgString = await decryptData(encryptedImg, imageKeyByteArray)
+    var pixelArray = stringToPixelArr(imgString)
+    return pixelArray;
 }
 
 // use this hash function temporarily until Heimdall gets fixed
