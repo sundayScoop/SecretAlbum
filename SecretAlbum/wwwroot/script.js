@@ -5,8 +5,8 @@ import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.ne
 
 const imgInput = document.getElementById('imgfileinput')
 const uploadCanvas = document.getElementById('imgfileoutput')
-uploadCanvas.width = 300;
-uploadCanvas.height = 300;
+const canvasWidth = 300;
+const canvasHeight = 300;
 
 intialize()
 
@@ -33,14 +33,17 @@ async function intialize() {
 }
 
 imgInput.addEventListener("change", () => {
+    uploadCanvas.width = canvasWidth
+    uploadCanvas.height = canvasHeight
     const ctx = uploadCanvas.getContext('2d');
-    ctx.clearRect(0, 0, uploadCanvas.width, uploadCanvas.height);     // clear the canvas
-    const imgInstance = processImage(imgInput.files[0])                       // convert img file to an Image instance
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);     // clear the canvas
+    const imgInstance = processImage(imgInput.files[0])               // convert img file to an Image instance
     imgInstance.onload = function () {
         let width = imgInstance.naturalWidth;
         let height = imgInstance.naturalHeight
-        const [newWidth, newHeight] = resizeImage(width, height);
-        ctx.drawImage(imgInstance, 0, 0, newWidth, newHeight);
+        const [newX, newY, newWidth, newHeight] = getNewSizeAndPlacement(width, height);
+        console.log([newX, newY, newWidth, newHeight])
+        ctx.drawImage(imgInstance, newX, newY, newWidth, newHeight);
     }
 })
 
@@ -128,16 +131,24 @@ function processImage(imgFile) {
     return imgInstance;
 }
 
-function resizeImage(width, height) {
+function getNewSizeAndPlacement(width, height) {
     var ratio;
-    if (width < height) {
-        ratio = uploadCanvas.height / height
+    if (width == height) {
+        ratio = 1
+    }
+    else if (width < height) {
+        ratio = canvasHeight / height
+
     } else {
-        ratio = uploadCanvas.width / width
+        ratio = canvasWidth / width
     }
     const newHeight = height * ratio
     const newWidth = width * ratio
-    return [newWidth, newHeight]
+
+    const newX = parseInt((canvasWidth - newWidth) / 2)
+    const newY = parseInt((canvasHeight - newHeight) / 2)
+
+    return [newX, newY, newWidth, newHeight]
 }
 
 async function upload() {
@@ -156,6 +167,8 @@ async function upload() {
     const seed = RandomBigInt();
     const imageKey = Point.g.times(seed).times(cvk)
     const imageKeyByteArray = BigIntToByteArray(imageKey.x)
+    var ctx = uploadCanvas.getContext('2d');
+
     const encryptedImgString = await encryptImage(ctx, imageKeyByteArray);
 
     // get description
@@ -182,25 +195,26 @@ function pixelArrToString(arr) {
     for (var i = 0; i < arr.length; i += 4) {
         s += (String.fromCharCode(arr[i])
             + String.fromCharCode(arr[i + 1])
-            + String.fromCharCode(arr[i + 2]));
+            + String.fromCharCode(arr[i + 2])
+            + String.fromCharCode(arr[i + 3]));
     }
     return s;
 }
 
 function stringToPixelArr(s) {
     var arr = [];
-    for (var i = 0; i < s.length; i += 3) {
-        for (var j = 0; j < 3; j++) {
+    for (var i = 0; i < s.length; i += 4) {
+        for (var j = 0; j < 4; j++) {
             arr.push(s.substring(i + j, i + j + 1).charCodeAt());
         }
-        arr.push(255); // Hardcodes alpha to 255.
+        // arr.push(255); // Hardcodes alpha to 255.
     }
     return arr;
 }
 
 async function encryptImage(ctx, cvk) {
     var ctx = uploadCanvas.getContext('2d');
-    var imgData = ctx.getImageData(0, 0, uploadCanvas.width, uploadCanvas.height);
+    var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
     var pixelArray = imgData.data;
     var imgString = pixelArrToString(pixelArray);
     return await encryptData(imgString, cvk);
