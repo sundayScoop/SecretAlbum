@@ -102,12 +102,10 @@ async function showMyAlbum() {
             imageKeyByteArray = BigIntToByteArray(imageKey.x)
         }
 
-        // put image on canvas
+        // draw decrypted image on canvas
         var ctx = rowCanvas.getContext('2d');
         const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
         const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
-
-        // draw decrypted image
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
         ctx.putImageData(imgData, 0, 0)
     }
@@ -116,7 +114,7 @@ async function showMyAlbum() {
 function verifyLogIn(cvk, uid) {
     if (cvk === null || uid === null) {
         alert("CVK/UID not found, please log in first")
-        // window.location.replace(window.location.href + "index.html");
+        // window.location.replace(window.location.origin);
         localStorage.setItem("CVK", 1);
         localStorage.setItem("UID", 1);
         return false;
@@ -191,7 +189,6 @@ async function upload() {
 // source: https://alicebobandmallory.com/articles/2010/10/14/encrypt-images-in-javascript
 function pixelArrToString(arr) {
     var s = "";
-    // Removes alpha to save space.
     for (var i = 0; i < arr.length; i += 4) {
         s += (String.fromCharCode(arr[i])
             + String.fromCharCode(arr[i + 1])
@@ -207,7 +204,6 @@ function stringToPixelArr(s) {
         for (var j = 0; j < 4; j++) {
             arr.push(s.substring(i + j, i + j + 1).charCodeAt());
         }
-        // arr.push(255); // Hardcodes alpha to 255.
     }
     return arr;
 }
