@@ -97,8 +97,9 @@ async function showMyAlbum() {
         // decrypt image
         var imageKey
         var imageKeyByteArray
+        const decryptedSeed = BigInt(await decryptData(entry.seed, cvk))
         if (entry.imageKey == "0") {
-            imageKey = Point.g.times(BigInt(entry.seed)).times(cvk)
+            imageKey = Point.g.times(decryptedSeed).times(cvk)
             imageKeyByteArray = BigIntToByteArray(imageKey.x)
         }
 
@@ -163,6 +164,7 @@ async function upload() {
 
     // create image key and encrypt image
     const seed = RandomBigInt();
+    const encryptedSeed = await encryptData(seed.toString(), cvk)
     const imageKey = Point.g.times(seed).times(cvk)
     const imageKeyByteArray = BigIntToByteArray(imageKey.x)
     var ctx = uploadCanvas.getContext('2d');
@@ -175,7 +177,7 @@ async function upload() {
 
     // send the image and description to the server
     const form = new FormData();
-    form.append("seed", seed)
+    form.append("seed", encryptedSeed)
     form.append("description", description)
     form.append("encryptedImg", encryptedImgString);
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${albumId}`, {
