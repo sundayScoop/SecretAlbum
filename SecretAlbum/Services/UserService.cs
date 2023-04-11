@@ -55,7 +55,21 @@ public class UserService : IUserService
 
     public void RegisterAlbum(string albumId, string albumName)
     {
-        // TODO: add entry to album database
+        // TODO: add entry to album database. make sure only one entry per albumId exists (albumId is primary key)
+        Album newAlbum = new Album
+        {
+            AlbumId = albumId,
+            Name = albumName
+        };
+        _context.Albums.Update(newAlbum);
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
         return;
     }
 
@@ -70,14 +84,13 @@ public class UserService : IUserService
             EncryptedData = newImageData
         };
         _context.Entries.Add(newEntry);
-        _context.SaveChanges();
-        // try
-        // {
-        //     _context.SaveChanges();
-        // }
-        // catch (Exception e)
-        // {
-        //     Console.WriteLine(e);
-        // }
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }

@@ -63,7 +63,9 @@ async function queryAlbums() {
         dropdown.appendChild(option)
     }
 
-    const btnSelect = document.createElement("button");
+    var btnSelect = document.getElementById("btnSelect");
+    if (btnSelect) btnSelect.remove()
+    btnSelect = document.createElement("button");
     btnSelect.id = "btnSelect"
     search.appendChild(btnSelect)
     btnSelect.addEventListener('click', getSelectedAlbum);
@@ -290,7 +292,7 @@ async function decryptImage(encryptedImg, keyBytes) {
 }
 
 // use this hash function temporarily until Heimdall gets fixed
-const getSHA256Hash = async (input) => {
+async function getSHA256Hash(input) {
     const textAsBuffer = new TextEncoder().encode(input);
     const hashBuffer = await window.crypto.subtle.digest("SHA-256", textAsBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
