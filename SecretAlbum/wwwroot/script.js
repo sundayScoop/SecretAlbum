@@ -100,6 +100,8 @@ function intialize() {
     var cvk = BigInt(window.localStorage.getItem("CVK"));
     var uid = window.localStorage.getItem("UID");
     if (!verifyLogIn(cvk, uid)) window.location.replace(window.location.origin)
+
+    registerAlbum()
 }
 
 imgInput.addEventListener("change", () => {

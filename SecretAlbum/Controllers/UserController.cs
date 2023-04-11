@@ -40,6 +40,21 @@ namespace SecretAlbum.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string albumName)
+        {
+            try
+            {
+                _userService.RegisterAlbum(albumId, albumName);
+                return Ok();
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+
+        }
+
         [HttpGet]
         public IActionResult GetImages([FromQuery] string albumId)
         {

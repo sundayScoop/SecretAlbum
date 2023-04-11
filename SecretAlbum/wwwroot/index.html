@@ -6,10 +6,12 @@
     document.getElementById('loginBtn').addEventListener('click', async function () {
         var user = document.getElementById('username_si').value;
         var pass = document.getElementById('password_si').value;
+        var albumName = document.getElementById('albumname_si').value;
         var obj = await signIn.start_Heimdall(user, pass);
 
         localStorage.setItem("CVK", obj.CVK);
         localStorage.setItem("UID", obj.UID);
+        localStorage.setItem("albumName", albumName);
 
         window.location.replace(window.location.href + "main.html");
     });
@@ -54,7 +56,10 @@
         </header>
     </div>
 
-    <div id="login_form">
+    <div id="login_form" style="text-align: center;">
+        <label for="albumname">Album Name:</label>
+        <input type="text" id="albumname_si" name="albumname">
+        <br>
         <label for="username">Username:</label>
         <input type="text" id="username_si" name="username">
         <br>
@@ -64,7 +69,7 @@
         <button id="loginBtn">Login</button>
         <u onclick="switchDiv()">No Account? Sign Up!</u>
     </div>
-    <div style="display: none;" id="signup_form">
+    <div style="display: none;" id="signup_form" style="text-align: center;">
         <label for="username">Username:</label>
         <input type="text" id="username_su" name="username">
         <br>

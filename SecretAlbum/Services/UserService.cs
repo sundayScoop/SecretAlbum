@@ -9,6 +9,7 @@ public interface IUserService
     List<string> GetAlbums();
     List<Entry> GetSelectedAlbum(string albumName);
     List<Entry> GetUserImages(string albumId);
+    void RegisterAlbum(string albumId, string albumName);
     void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
 }
 
@@ -50,6 +51,12 @@ public class UserService : IUserService
             .Where(e => e.AlbumId.Equals(albumId))
             .Select(e => new Entry { Id = e.Id, Seed = e.Seed, ImageKey = e.ImageKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
+    }
+
+    public void RegisterAlbum(string albumId, string albumName)
+    {
+        // TODO: add entry to album database
+        return;
     }
 
     public void AddImage(string albumId, string seed, string newImageData, string description, string imageKey)
