@@ -28,6 +28,19 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetSelectedAlbum([FromQuery] string albumName)
+        {
+            try
+            {
+                return Ok(_userService.GetSelectedAlbum(albumName));
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+        }
+
+        [HttpGet]
         public IActionResult GetImages([FromQuery] string albumId)
         {
             try

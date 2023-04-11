@@ -46,19 +46,37 @@ async function queryAlbums() {
         return
     }
     const respJson = JSON.parse(respText)
-    var table = document.getElementById("searchtbl");
-    var tbody = table.getElementsByTagName("tbody")[0];
-    while (table.rows.length > 1) table.rows[1].remove();
+
+    // refresh dropdown
+    var dropdown = document.getElementById("dropdown")
+    if (dropdown) dropdown.remove()
+    const search = document.getElementById("search")
+    dropdown = document.createElement("select");
+    dropdown.id = "dropdown"
+    search.appendChild(dropdown)
 
     for (var i = 0; i < respJson.length; i++) {
         const name = respJson[i]
-        // Create a new row and cells
-        const row = document.createElement("tr");
-        const nameCell = document.createElement("td");
-        nameCell.textContent = name;
-        row.appendChild(nameCell)
-        tbody.appendChild(row);
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        dropdown.appendChild(option)
     }
+
+    const btnSelect = document.createElement("button");
+    btnSelect.id = "btnSelect"
+    search.appendChild(btnSelect)
+    btnSelect.addEventListener('click', getSelectedAlbum);
+}
+
+async function getSelectedAlbum() {
+    const dropdown = document.getElementById("dropdown")
+    const albumName = dropdown.value
+    const form = new FormData();
+    const resp = await fetch(window.location.origin + `/user/getselectedalbum?albumName=${albumName}`, {
+        method: 'GET',
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
 }
 
 async function registerAlbum() {
@@ -78,7 +96,7 @@ async function registerAlbum() {
     if (!resp.ok) alert("Something went wrong with uploading the image");
 }
 
-async function intialize() {
+function intialize() {
     var cvk = BigInt(window.localStorage.getItem("CVK"));
     var uid = window.localStorage.getItem("UID");
     if (!verifyLogIn(cvk, uid)) window.location.replace(window.location.origin)
