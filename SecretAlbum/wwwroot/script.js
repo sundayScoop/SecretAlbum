@@ -20,14 +20,66 @@ btnLogout.addEventListener('click', (click) => {
     window.location.replace(window.location.origin);
 });
 
-const btnAccount = document.getElementById('accountbtn');
-btnAccount.addEventListener('click', (click) => {
-    showMyAlbum();
-});
+const menuAccount = document.getElementById('accountmenu');
+menuAccount.addEventListener('click', showMyAlbum);
 
+const menuSearch = document.getElementById('searchmenu');
+menuSearch.addEventListener('click', queryAlbums);
+
+async function queryAlbums() {
+    const cvk = BigInt(window.localStorage.getItem("CVK"));
+    const uid = window.localStorage.getItem("UID");
+    const albumName = window.localStorage.getItem("albumName");
+    if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
+
+    // query available album names from the server 
+    const form = new FormData();
+    form.append("albumName", albumName)
+    const resp = await fetch(window.location.origin + `/user/getalbums`, {
+        method: 'GET',
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+
+    const respText = await resp.text();
+    if (respText == "--FAILED--") {
+        alert("failed.")
+        return
+    }
+    const respJson = JSON.parse(respText)
+    var table = document.getElementById("searchtbl");
+    var tbody = table.getElementsByTagName("tbody")[0];
+    while (table.rows.length > 1) table.rows[1].remove();
+
+    for (var i = 0; i < respJson.length; i++) {
+        const name = respJson[i]
+        // Create a new row and cells
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.textContent = name;
+        row.appendChild(nameCell)
+        tbody.appendChild(row);
+    }
+}
+
+async function registerAlbum() {
+    const cvk = BigInt(window.localStorage.getItem("CVK"));
+    const uid = window.localStorage.getItem("UID");
+    const albumName = window.localStorage.getItem("albumName");
+    if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
+    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+
+    // query available album names from the server 
+    const form = new FormData();
+    form.append("albumName", albumName)
+    const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${albumId}`, {
+        method: 'POST',
+        body: form
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+}
 
 async function intialize() {
-    var cvk = window.localStorage.getItem("CVK");
+    var cvk = BigInt(window.localStorage.getItem("CVK"));
     var uid = window.localStorage.getItem("UID");
     if (!verifyLogIn(cvk, uid)) window.location.replace(window.location.origin)
 }
@@ -48,14 +100,12 @@ imgInput.addEventListener("change", () => {
 })
 
 async function showMyAlbum() {
-    var cvk = window.localStorage.getItem("CVK");
-    cvk = BigIntToByteArray(BigInt(cvk));
+    var cvk = BigInt(window.localStorage.getItem("CVK"));
     var uid = window.localStorage.getItem("UID");
-
     if (!verifyLogIn(cvk, uid)) return
-
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
-    const resp = await fetch(window.location.origin + `/user/getdata?albumId=${albumId}`);
+
+    const resp = await fetch(window.location.origin + `/user/getimages?albumId=${albumId}`);
     const respText = await resp.text();
     if (respText == "--FAILED--") {
         alert("failed.")
@@ -97,7 +147,7 @@ async function showMyAlbum() {
         // decrypt image
         var imageKey
         var imageKeyByteArray
-        const decryptedSeed = BigInt(await decryptData(entry.seed, cvk))
+        const decryptedSeed = BigInt(await decryptData(entry.seed, BigIntToByteArray(cvk)))
         if (entry.imageKey == "0") {
             imageKey = Point.g.times(decryptedSeed).times(cvk)
             imageKeyByteArray = BigIntToByteArray(imageKey.x)
@@ -118,6 +168,7 @@ function verifyLogIn(cvk, uid) {
         // window.location.replace(window.location.origin);
         localStorage.setItem("CVK", 1);
         localStorage.setItem("UID", 1);
+        localStorage.setItem("albumName", "test");
         return false;
     }
     return true;
@@ -151,20 +202,14 @@ function getNewSizeAndPlacement(width, height) {
 }
 
 async function upload() {
-    console.log("debug upload");
-
-    var cvk = window.localStorage.getItem("CVK");
-    cvk = BigIntToByteArray(BigInt(cvk));
+    var cvk = BigInt(window.localStorage.getItem("CVK"));
     var uid = window.localStorage.getItem("UID");
-
     if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
-
-    // get album Id by hashing the uid & cvk
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    const encryptedSeed = await encryptData(seed.toString(), cvk)
+    const encryptedSeed = await encryptData(seed.toString(), BigIntToByteArray(cvk))
     const imageKey = Point.g.times(seed).times(cvk)
     const imageKeyByteArray = BigIntToByteArray(imageKey.x)
     var ctx = uploadCanvas.getContext('2d');
@@ -210,16 +255,16 @@ function stringToPixelArr(s) {
     return arr;
 }
 
-async function encryptImage(ctx, cvk) {
+async function encryptImage(ctx, keyBytes) {
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
     var pixelArray = imgData.data;
     var imgString = pixelArrToString(pixelArray);
-    return await encryptData(imgString, cvk);
+    return await encryptData(imgString, keyBytes);
 }
 
-async function decryptImage(encryptedImg, imageKeyByteArray) {
-    var imgString = await decryptData(encryptedImg, imageKeyByteArray)
+async function decryptImage(encryptedImg, keyBytes) {
+    var imgString = await decryptData(encryptedImg, keyBytes)
     var pixelArray = stringToPixelArr(imgString)
     return pixelArray;
 }

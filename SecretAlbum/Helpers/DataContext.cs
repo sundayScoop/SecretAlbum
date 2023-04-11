@@ -18,6 +18,7 @@ namespace SecretAlbum.Helpers
         }
 
         public DbSet<Entry> Entries { get; set; }
+        public DbSet<Album> Albums { get; set; }
 
     }
 }

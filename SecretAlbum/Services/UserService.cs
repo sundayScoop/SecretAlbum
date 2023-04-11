@@ -6,6 +6,7 @@ using System.Data.SqlTypes;
 
 public interface IUserService
 {
+    List<string> GetAlbums();
     List<Entry> GetUserImages(string albumId);
     void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
 }
@@ -17,6 +18,13 @@ public class UserService : IUserService
     public UserService(DataContext context)
     {
         _context = context;
+    }
+
+    public List<string> GetAlbums()
+    {
+        return _context.Albums
+            .Select(a => a.Name)
+            .ToList();
     }
 
 

@@ -15,7 +15,20 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetData([FromQuery] string albumId)
+        public IActionResult GetAlbums()
+        {
+            try
+            {
+                return Ok(_userService.GetAlbums());
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetImages([FromQuery] string albumId)
         {
             try
             {
