@@ -1,5 +1,8 @@
 import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
 
+export const canvasWidth = 300;
+export const canvasHeight = 300;
+
 export function verifyLogIn(cvk, uid) {
     if (cvk === null || uid === null) {
         alert("CVK/UID not found, please log in first")
