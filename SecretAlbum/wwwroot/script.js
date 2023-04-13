@@ -27,14 +27,16 @@ const menuSearch = document.getElementById('searchmenu');
 menuSearch.addEventListener('click', queryAlbums);
 
 async function queryAlbums() {
+    registerAlbum()
+
     const cvk = BigInt(window.localStorage.getItem("CVK"));
     const uid = window.localStorage.getItem("UID");
-    const albumName = window.localStorage.getItem("albumName");
+    const userAlias = window.localStorage.getItem("userAlias");
     if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
 
-    // query available album names from the server 
+    // query available user aliases from the server 
     const form = new FormData();
-    form.append("albumName", albumName)
+    form.append("userAlias", userAlias)
     const resp = await fetch(window.location.origin + `/user/getalbums`, {
         method: 'GET',
     });
@@ -73,9 +75,8 @@ async function queryAlbums() {
 
 async function getSelectedAlbum() {
     const dropdown = document.getElementById("dropdown")
-    const albumName = dropdown.value
-    const form = new FormData();
-    const resp = await fetch(window.location.origin + `/user/getselectedalbum?albumName=${albumName}`, {
+    const userAlias = dropdown.value
+    const resp = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userAlias}`, {
         method: 'GET',
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
@@ -84,13 +85,13 @@ async function getSelectedAlbum() {
 async function registerAlbum() {
     const cvk = BigInt(window.localStorage.getItem("CVK"));
     const uid = window.localStorage.getItem("UID");
-    const albumName = window.localStorage.getItem("albumName");
+    const userAlias = window.localStorage.getItem("userAlias");
     if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
 
-    // query available album names from the server 
+    // query available user aliases from the server 
     const form = new FormData();
-    form.append("albumName", albumName)
+    form.append("userAlias", userAlias)
     const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${albumId}`, {
         method: 'POST',
         body: form
@@ -190,7 +191,7 @@ function verifyLogIn(cvk, uid) {
         // window.location.replace(window.location.origin);
         localStorage.setItem("CVK", 1);
         localStorage.setItem("UID", 1);
-        localStorage.setItem("albumName", "test");
+        localStorage.setItem("userAlias", "test");
         return false;
     }
     return true;

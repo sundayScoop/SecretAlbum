@@ -28,11 +28,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetSelectedAlbum([FromQuery] string albumName)
+        public IActionResult GetSelectedAlbum([FromQuery] string userAlias)
         {
             try
             {
-                return Ok(_userService.GetSelectedAlbum(albumName));
+                return Ok(_userService.GetSelectedAlbum(userAlias));
             }
             catch
             {
@@ -41,11 +41,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string albumName)
+        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string userAlias)
         {
             try
             {
-                _userService.RegisterAlbum(albumId, albumName);
+                _userService.RegisterAlbum(albumId, userAlias);
                 return Ok();
             }
             catch

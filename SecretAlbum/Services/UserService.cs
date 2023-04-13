@@ -7,9 +7,9 @@ using System.Data.SqlTypes;
 public interface IUserService
 {
     List<string> GetAlbums();
-    List<Entry> GetSelectedAlbum(string albumName);
+    List<Entry> GetSelectedAlbum(string userAlias);
     List<Entry> GetUserImages(string albumId);
-    void RegisterAlbum(string albumId, string albumName);
+    void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
 }
 
@@ -25,18 +25,16 @@ public class UserService : IUserService
     public List<string> GetAlbums()
     {
         return _context.Albums
-            .Select(a => a.Name)
+            .Select(a => a.UserAlias)
             .ToList();
     }
 
-    public List<Entry> GetSelectedAlbum(string albumName)
+    public List<Entry> GetSelectedAlbum(string userAlias)
     {
         string albumId = _context.Albums
-            .Where(a => a.Name.Equals(albumName))
+            .Where(a => a.UserAlias.Equals(userAlias))
             .Select(a => a.AlbumId)
             .ToList()[0];
-
-        Console.WriteLine(albumId);
 
         return _context.Entries
             .Where(e => e.AlbumId.Equals(albumId))
@@ -53,15 +51,25 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public void RegisterAlbum(string albumId, string albumName)
+    public void RegisterAlbum(string albumId, string userAlias)
     {
         // TODO: add entry to album database. make sure only one entry per albumId exists (albumId is primary key)
         Album newAlbum = new Album
         {
             AlbumId = albumId,
-            Name = albumName
+            UserAlias = userAlias
         };
-        _context.Albums.Update(newAlbum);
+
+        var existingRecord = _context.Albums.SingleOrDefault(e => e.AlbumId == albumId);
+        if (existingRecord == null)
+        {
+            _context.Albums.Add(newAlbum);
+        }
+        else
+        {
+            _context.Albums.Update(newAlbum);
+        }
+
         try
         {
             _context.SaveChanges();

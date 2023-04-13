@@ -6,6 +6,6 @@ namespace SecretAlbum
     {
         [Key]
         public string AlbumId { get; set; }
-        public string Name { get; set; }
+        public string UserAlias { get; set; }
     }
 }

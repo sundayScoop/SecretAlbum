@@ -6,14 +6,14 @@
     document.getElementById('loginBtn').addEventListener('click', async function () {
         var user = document.getElementById('username_si').value;
         var pass = document.getElementById('password_si').value;
-        var albumName = document.getElementById('albumname_si').value;
+        var userAlias = document.getElementById('userAlias_si').value;
         var obj = await signIn.start_Heimdall(user, pass);
 
         localStorage.setItem("CVK", obj.CVK);
         localStorage.setItem("UID", obj.UID);
-        localStorage.setItem("albumName", albumName);
+        localStorage.setItem("userAlias", userAlias);
 
-        window.location.replace(window.location.href + "main.html");
+        window.location.replace(window.location.origin + "/main.html#account");
     });
 
     document.getElementById('signupBtn').addEventListener('click', async function () {
@@ -24,14 +24,15 @@
         localStorage.setItem("CVK", obj.CVK);
         localStorage.setItem("UID", obj.UID);
 
-        window.location.replace(window.location.origin + "/main.html");
+        window.location.replace(window.location.origin + "/main.html#upload");
     });
 
 </script>
 <script>
-    if (window.localStorage.getItem("CVK") !== null) {
-        window.location.replace(window.location.origin + "/main.html");
-    }
+
+    localStorage.removeItem("CVK");
+    localStorage.removeItem("UID");
+    localStorage.removeItem("userAlias");
 
     function switchDiv() {
         if (document.getElementById("login_form").style.display === "none") {
@@ -57,8 +58,8 @@
     </div>
 
     <div id="login_form" style="text-align: center;">
-        <label for="albumname">Album Name:</label>
-        <input type="text" id="albumname_si" name="albumname">
+        <label for="userAlias">User Alias:</label>
+        <input type="text" id="userAlias_si" name="userAlias">
         <br>
         <label for="username">Username:</label>
         <input type="text" id="username_si" name="username">
