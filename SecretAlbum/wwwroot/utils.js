@@ -6,13 +6,8 @@ export const canvasHeight = 300;
 export function verifyLogIn(cvk, uid) {
     if (cvk === null || uid === null) {
         alert("CVK/UID not found, please log in first")
-        // window.location.replace(window.location.origin);
-        localStorage.setItem("CVK", 1);
-        localStorage.setItem("UID", 1);
-        localStorage.setItem("userAlias", "test");
-        return false;
+        window.location.replace(window.location.origin);
     }
-    return true;
 }
 
 // source: https://alicebobandmallory.com/articles/2010/10/14/encrypt-images-in-javascript

@@ -5,9 +5,9 @@ import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.ne
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash } from "/utils.js"
 
 export async function showMyAlbum() {
-    var cvk = BigInt(window.localStorage.getItem("CVK"));
+    var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
-    if (!verifyLogIn(cvk, uid)) return
+    verifyLogIn(cvk, uid)
     const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
 
     // request my images from server
@@ -70,9 +70,9 @@ function prepareCanvas(imageCell, i) {
 
 async function prepareImageKey(seed, entryImageKey, cvk) {
     var imageKeyByteArray
-    const decryptedSeed = BigInt(await decryptData(seed, BigIntToByteArray(cvk)))
+    const decryptedSeed = BigInt(await decryptData(seed, BigIntToByteArray(BigInt(cvk))))
     if (entryImageKey == "0") {
-        var imageKey = Point.g.times(decryptedSeed).times(cvk)
+        var imageKey = Point.g.times(decryptedSeed).times(BigInt(cvk))
         imageKeyByteArray = BigIntToByteArray(imageKey.x)
     }
     return imageKeyByteArray

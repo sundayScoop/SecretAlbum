@@ -17,7 +17,6 @@ imgInput.addEventListener("change", () => {
         let width = imgInstance.naturalWidth;
         let height = imgInstance.naturalHeight
         const [newX, newY, newWidth, newHeight] = getNewSizeAndPlacement(width, height);
-        console.log([newX, newY, newWidth, newHeight])
         ctx.drawImage(imgInstance, newX, newY, newWidth, newHeight);
     }
 })
@@ -50,15 +49,16 @@ function getNewSizeAndPlacement(width, height) {
 }
 
 export async function upload() {
-    var cvk = BigInt(window.localStorage.getItem("CVK"));
+    var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
-    if (!verifyLogIn(cvk, uid)) return; //window.location.replace(window.location.origin + "/index.html");
-    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+    verifyLogIn(cvk, uid)
+    const albumId = await await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+    console.log(albumId)
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    const encryptedSeed = await encryptData(seed.toString(), BigIntToByteArray(cvk))
-    const imageKey = Point.g.times(seed).times(cvk)
+    const encryptedSeed = await encryptData(seed.toString(), BigIntToByteArray(BigInt(cvk)))
+    const imageKey = Point.g.times(seed).times(BigInt(cvk))
     const imageKeyByteArray = BigIntToByteArray(imageKey.x)
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -78,5 +78,4 @@ export async function upload() {
         body: form
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
-    // else location.reload();
 }
