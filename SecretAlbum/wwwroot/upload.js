@@ -2,7 +2,7 @@ import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-found
 import { BigIntToByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, encryptImage, verifyLogIn, getSHA256Hash } from "/utils.js"
+import { canvasWidth, canvasHeight, encryptImage, verifyLogIn, getSHA256Hash, processImage } from "/utils.js"
 
 export const imgInput = document.getElementById('imgfileinput')
 export const uploadCanvas = document.getElementById('imgfileoutput')
@@ -12,6 +12,7 @@ imgInput.addEventListener("change", () => {
     uploadCanvas.height = canvasHeight
     const ctx = uploadCanvas.getContext('2d');
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);         // clear the canvas
+    console.log(imgInput.files[0])
     const imgInstance = processImage(imgInput.files[0])     // convert img file to an Image instance
     imgInstance.onload = function () {
         let width = imgInstance.naturalWidth;
@@ -20,13 +21,6 @@ imgInput.addEventListener("change", () => {
         ctx.drawImage(imgInstance, newX, newY, newWidth, newHeight);
     }
 })
-
-function processImage(imgFile) {
-    const imgUrl = `${URL.createObjectURL(imgFile)}`
-    const imgInstance = new Image(150, 150);
-    imgInstance.src = imgUrl;
-    return imgInstance;
-}
 
 function getNewSizeAndPlacement(width, height) {
     var ratio;

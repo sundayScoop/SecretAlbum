@@ -10,6 +10,13 @@ export function verifyLogIn(cvk, uid) {
     }
 }
 
+export function processImage(imgFile) {
+    const imgUrl = `${URL.createObjectURL(imgFile)}`
+    const imgInstance = new Image(150, 150);
+    imgInstance.src = imgUrl;
+    return imgInstance;
+}
+
 // source: https://alicebobandmallory.com/articles/2010/10/14/encrypt-images-in-javascript
 function pixelArrToString(arr) {
     var s = "";

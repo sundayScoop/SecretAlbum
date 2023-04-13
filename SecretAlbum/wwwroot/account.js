@@ -2,7 +2,7 @@ import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-found
 import { BigIntToByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash } from "/utils.js"
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, processImage } from "/utils.js"
 
 export async function showMyAlbum() {
     var cvk = window.localStorage.getItem("CVK");
@@ -32,14 +32,22 @@ export async function populateTable(table, respJson, cvk) {
         const entry = respJson[i]
         var imageCell = constructTableRow(entry.description, tbody);
         var rowCanvas = prepareCanvas(imageCell, i, canvasWidth, canvasHeight)
-        var imageKeyByteArray = await prepareImageKey(entry.seed, entry.imageKey, cvk)
-
-        // draw decrypted image on canvas
         var ctx = rowCanvas.getContext('2d');
-        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
-        const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
-        ctx.putImageData(imgData, 0, 0)
+
+        var imageKeyByteArray
+        var imgData
+        try {
+            imageKeyByteArray = await prepareImageKey(entry.seed, entry.imageKey, cvk)
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
+            imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+            ctx.putImageData(imgData, 0, 0)
+        }
+        catch {
+            const imgInstance = new Image(150, 150);
+            imgInstance.src = "/images/encrypted2.png";
+            ctx.drawImage(imgInstance, 0, 0, canvasWidth, canvasHeight)
+        }
     }
 }
 

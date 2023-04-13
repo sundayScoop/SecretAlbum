@@ -24,7 +24,7 @@
         localStorage.setItem("CVK", obj.CVK);
         localStorage.setItem("UID", obj.UID);
 
-        window.location.replace(window.location.origin + "/main.html#upload");
+        window.location.replace(window.location.origin);
     });
 
 </script>
@@ -70,7 +70,7 @@
         <button id="loginBtn">Login</button>
         <u onclick="switchDiv()">No Account? Sign Up!</u>
     </div>
-    <div style="display: none;" id="signup_form" style="text-align: center;">
+    <div id="signup_form" style="display: none; text-align: center;">
         <label for="username">Username:</label>
         <input type="text" id="username_su" name="username">
         <br>
