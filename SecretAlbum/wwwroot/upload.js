@@ -11,8 +11,8 @@ imgInput.addEventListener("change", () => {
     uploadCanvas.width = canvasWidth
     uploadCanvas.height = canvasHeight
     const ctx = uploadCanvas.getContext('2d');
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);     // clear the canvas
-    const imgInstance = processImage(imgInput.files[0])               // convert img file to an Image instance
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);         // clear the canvas
+    const imgInstance = processImage(imgInput.files[0])     // convert img file to an Image instance
     imgInstance.onload = function () {
         let width = imgInstance.naturalWidth;
         let height = imgInstance.naturalHeight
@@ -41,10 +41,8 @@ function getNewSizeAndPlacement(width, height) {
     }
     const newHeight = height * ratio
     const newWidth = width * ratio
-
     const newX = parseInt((canvasWidth - newWidth) / 2)
     const newY = parseInt((canvasHeight - newHeight) / 2)
-
     return [newX, newY, newWidth, newHeight]
 }
 

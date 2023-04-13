@@ -20,14 +20,18 @@ export async function showMyAlbum() {
     const respJson = JSON.parse(respText);
 
     // set up the table and clear it
-    var table = document.getElementById("tbl");
+    var table = document.getElementById("myalbumtbl");
+    populateTable(table, respJson, cvk)
+}
+
+export async function populateTable(table, respJson, cvk) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respJson.length; i++) {
         const entry = respJson[i]
         var imageCell = constructTableRow(entry.description, tbody);
-        var rowCanvas = prepareCanvas(imageCell, i)
+        var rowCanvas = prepareCanvas(imageCell, i, canvasWidth, canvasHeight)
         var imageKeyByteArray = await prepareImageKey(entry.seed, entry.imageKey, cvk)
 
         // draw decrypted image on canvas
@@ -38,6 +42,7 @@ export async function showMyAlbum() {
         ctx.putImageData(imgData, 0, 0)
     }
 }
+
 
 function constructTableRow(description, tbody) {
     const row = document.createElement("tr");
@@ -56,16 +61,15 @@ function constructTableRow(description, tbody) {
     return imageCell
 }
 
-function prepareCanvas(imageCell, i) {
+function prepareCanvas(imageCell, i, canvasWidth, canvasHeight) {
     let canvas = document.createElement("canvas");
     let canvasName = "myAlbumCanvas" + i.toString()
     canvas.setAttribute("id", canvasName);
     imageCell.appendChild(canvas)
-    const rowCanvas = document.getElementById(canvasName)
-    rowCanvas.width = canvasWidth;
-    rowCanvas.height = canvasHeight;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
-    return rowCanvas
+    return canvas
 }
 
 async function prepareImageKey(seed, entryImageKey, cvk) {

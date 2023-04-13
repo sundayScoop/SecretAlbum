@@ -1,5 +1,6 @@
 import { Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash } from "/utils.js"
+import { populateTable } from "/account.js"
 
 export async function queryAlbums() {
     registerAlbum()
@@ -29,12 +30,22 @@ export async function queryAlbums() {
 }
 
 export async function getSelectedAlbum() {
+    const cvk = window.localStorage.getItem("CVK");
+    const uid = window.localStorage.getItem("UID");
+    verifyLogIn(cvk, uid)
+
     const dropdown = document.getElementById("dropdown")
-    const userAlias = dropdown.value
-    const resp = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userAlias}`, {
+    const userChosen = dropdown.value
+    const resp = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userChosen}`, {
         method: 'GET',
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
+    const respText = await resp.text();
+    if (respText == "--FAILED--") alert("failed.")
+    const respJson = JSON.parse(respText);
+
+    var table = document.getElementById("viewtbl");
+    populateTable(table, respJson, cvk)
 }
 
 export async function registerAlbum() {
