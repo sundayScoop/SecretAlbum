@@ -67,8 +67,10 @@ export async function registerAlbum() {
 function refreshDropdownOptions(respJson) {
     var dropdown = document.getElementById("dropdown")
     var options = dropdown.options
-    for (var i = 0; i < options.length; i++) {
-        options[i].remove()
+    console.log(options.length)
+    for (var i = options.length; i > 0; i--) {
+        console.log(i)
+        options[i - 1].remove()
     }
     for (var i = 0; i < respJson.length; i++) {
         const name = respJson[i]

@@ -4,6 +4,9 @@ import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, processImage } from "/utils.js"
 
+const encryptedDefaultImage = new Image(150, 150);
+encryptedDefaultImage.src = "/images/encrypted2.png";
+
 export async function showMyAlbum() {
     var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
@@ -44,9 +47,7 @@ export async function populateTable(table, respJson, cvk) {
             ctx.putImageData(imgData, 0, 0)
         }
         catch {
-            const imgInstance = new Image(150, 150);
-            imgInstance.src = "/images/encrypted2.png";
-            ctx.drawImage(imgInstance, 0, 0, canvasWidth, canvasHeight)
+            ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
         }
     }
 }
