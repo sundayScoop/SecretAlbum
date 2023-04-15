@@ -11,7 +11,7 @@ export async function showMyAlbum() {
     var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
     verifyLogIn(cvk, uid)
-    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+    const albumId = await getSHA256Hash(uid + ":" + cvk)
 
     // request my images from server
     const resp = await fetch(window.location.origin + `/user/getimages?albumId=${albumId}`);
@@ -24,16 +24,16 @@ export async function showMyAlbum() {
 
     // set up the table and clear it
     var table = document.getElementById("myalbumtbl");
-    populateTable(table, respJson, cvk, ["Make Public", "Delete"])
+    populateTable(table, respJson, cvk, constructTableRow)
 }
 
-export async function populateTable(table, respJson, cvk, actions) {
+export async function populateTable(table, respJson, cvk, constructTableRow) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respJson.length; i++) {
         const entry = respJson[i]
-        var imageCell = constructTableRow(entry.description, tbody, actions);
+        var imageCell = constructTableRow(entry.description, tbody, entry.id);
         var rowCanvas = prepareCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
@@ -52,7 +52,7 @@ export async function populateTable(table, respJson, cvk, actions) {
     }
 }
 
-function constructTableRow(description, tbody, actions) {
+function constructTableRow(description, tbody, imageId) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
@@ -65,18 +65,60 @@ function constructTableRow(description, tbody, actions) {
     row.appendChild(actionCell)
     tbody.appendChild(row);
 
-    // add action buttons
-    for (var i = 0; i < actions.length; i++) {
-        const actionBtn = document.createElement("button");
-        const br = document.createElement("br")
-        actionBtn.textContent = actions[i]
-        actionBtn.style = 'float: right; margin: 4px'
-        actionCell.appendChild(actionBtn)
-        actionCell.appendChild(br)
-    }
+    const br = document.createElement("br");
+
+    // append a make public button
+    const makePublicBtn = document.createElement("button");
+    makePublicBtn.textContent = "Make Public"
+    makePublicBtn.style = 'float: right; margin: 4px'
+    makePublicBtn.addEventListener('click', function () {
+        requestMakePublic(imageId);
+    })
+    actionCell.appendChild(makePublicBtn)
+    actionCell.appendChild(br)
+
+    // append a delete button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete"
+    deleteBtn.style = 'float: right; margin: 4px'
+    deleteBtn.addEventListener('click', function () {
+        requestDelete(imageId);
+    })
+    actionCell.appendChild(deleteBtn)
+    actionCell.appendChild(br)
 
     return imageCell
 }
+
+async function requestMakePublic(imageId) {
+    // request my images from server
+    const form = new FormData();
+    form.append("userAlias", "test1")
+    const resp = await fetch(window.location.origin + `/user/getalbums`, {
+        method: 'GET',
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+
+    const respText = await resp.text();
+    const respJson = JSON.parse(respText)
+    console.log(respJson)
+}
+
+
+async function requestDelete(imageId) {
+    // request my images from server
+    const form = new FormData();
+    form.append("userAlias", "test1")
+    const resp = await fetch(window.location.origin + `/user/getalbums`, {
+        method: 'GET',
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+
+    const respText = await resp.text();
+    const respJson = JSON.parse(respText)
+    console.log(respJson)
+}
+
 
 function prepareCanvas(imageCell, i, canvasWidth, canvasHeight) {
     let canvas = document.createElement("canvas");

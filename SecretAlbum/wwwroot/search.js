@@ -48,7 +48,23 @@ export async function getSelectedAlbum() {
     selectedAlbumText.textContent = "Viewing " + userChosen + "'s album"
 
     var table = document.getElementById("viewtbl");
-    populateTable(table, respJson, cvk, [])
+    populateTable(table, respJson, cvk, constructTableRowNoActions)
+}
+
+function constructTableRowNoActions(description, tbody, imageId) {  // imageId field is needed here
+    const row = document.createElement("tr");
+    const imageCell = document.createElement("td");
+    const descriptionCell = document.createElement("td");
+    descriptionCell.textContent = description;
+    const actionCell = document.createElement("td");
+    actionCell.style = "vertical-align: top;"
+
+    row.appendChild(imageCell)
+    row.appendChild(descriptionCell)
+    row.appendChild(actionCell)
+    tbody.appendChild(row);
+
+    return imageCell
 }
 
 export async function registerAlbum() {
