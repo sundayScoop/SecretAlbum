@@ -15,6 +15,8 @@ function intialize() {
     verifyLogIn(cvk, uid)
     registerAlbum()
     showMyAlbum()
+    const frontPageAlias = document.getElementById("frontpagealias");
+    frontPageAlias.textContent = window.localStorage.getItem("userAlias");
 }
 
 const btnUpload = document.getElementById('uploadbtn');

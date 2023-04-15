@@ -44,8 +44,11 @@ export async function getSelectedAlbum() {
     if (respText == "--FAILED--") alert("failed.")
     const respJson = JSON.parse(respText);
 
+    var selectedAlbumText = document.getElementById("selectedalbumtext");
+    selectedAlbumText.textContent = "Viewing " + userChosen + "'s album"
+
     var table = document.getElementById("viewtbl");
-    populateTable(table, respJson, cvk)
+    populateTable(table, respJson, cvk, [])
 }
 
 export async function registerAlbum() {
@@ -67,9 +70,7 @@ export async function registerAlbum() {
 function refreshDropdownOptions(respJson) {
     var dropdown = document.getElementById("dropdown")
     var options = dropdown.options
-    console.log(options.length)
     for (var i = options.length; i > 0; i--) {
-        console.log(i)
         options[i - 1].remove()
     }
     for (var i = 0; i < respJson.length; i++) {

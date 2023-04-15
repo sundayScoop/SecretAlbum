@@ -24,16 +24,16 @@ export async function showMyAlbum() {
 
     // set up the table and clear it
     var table = document.getElementById("myalbumtbl");
-    populateTable(table, respJson, cvk)
+    populateTable(table, respJson, cvk, ["Make Public", "Delete"])
 }
 
-export async function populateTable(table, respJson, cvk) {
+export async function populateTable(table, respJson, cvk, actions) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respJson.length; i++) {
         const entry = respJson[i]
-        var imageCell = constructTableRow(entry.description, tbody);
+        var imageCell = constructTableRow(entry.description, tbody, actions);
         var rowCanvas = prepareCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
@@ -52,20 +52,28 @@ export async function populateTable(table, respJson, cvk) {
     }
 }
 
-
-function constructTableRow(description, tbody) {
+function constructTableRow(description, tbody, actions) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
-    const actionCell = document.createElement("td");
-
     descriptionCell.textContent = description;
-    actionCell.textContent = "action";
+    const actionCell = document.createElement("td");
+    actionCell.style = "vertical-align: top;"
 
     row.appendChild(imageCell)
     row.appendChild(descriptionCell)
     row.appendChild(actionCell)
     tbody.appendChild(row);
+
+    // add action buttons
+    for (var i = 0; i < actions.length; i++) {
+        const actionBtn = document.createElement("button");
+        const br = document.createElement("br")
+        actionBtn.textContent = actions[i]
+        actionBtn.style = 'float: right; margin: 4px'
+        actionCell.appendChild(actionBtn)
+        actionCell.appendChild(br)
+    }
 
     return imageCell
 }
