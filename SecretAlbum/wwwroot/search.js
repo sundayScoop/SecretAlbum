@@ -1,6 +1,5 @@
-import { Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash } from "/utils.js"
-import { populateTable } from "/account.js"
+import { BigIntToByteArray } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 
 export async function queryAlbums() {
     registerAlbum()
@@ -51,7 +50,31 @@ export async function getSelectedAlbum() {
     populateTable(table, respJson, cvk, constructTableRowNoActions)
 }
 
-function constructTableRowNoActions(description, tbody, imageId) {  // imageId field is needed here
+export async function populateTable(table, respJson, cvk, constructTableRow) {
+    var tbody = table.getElementsByTagName("tbody")[0];
+    while (table.rows.length > 1) table.rows[1].remove();
+
+    for (var i = 0; i < respJson.length; i++) {
+        const entry = respJson[i]
+        var imageCell = constructTableRow(entry.description, tbody, entry.id, entry.imageKey);
+        var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
+        var ctx = rowCanvas.getContext('2d');
+        ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
+
+        try {
+            const imageKey = BigInt(entry.imageKey)
+            const imageKeyByteArray = BigIntToByteArray(imageKey)
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
+            const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+            ctx.putImageData(imgData, 0, 0)
+        }
+        catch {
+            ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
+        }
+    }
+}
+
+function constructTableRowNoActions(description, tbody) {  // imageId and imageKey fields are needed here
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
@@ -72,7 +95,7 @@ export async function registerAlbum() {
     const uid = window.localStorage.getItem("UID");
     const userAlias = window.localStorage.getItem("userAlias");
     verifyLogIn(cvk, uid)
-    const albumId = await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
+    const albumId = await getSHA256Hash(uid + ":" + cvk)
 
     const form = new FormData();
     form.append("userAlias", userAlias)

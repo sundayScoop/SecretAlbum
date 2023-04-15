@@ -11,6 +11,7 @@ public interface IUserService
     List<Entry> GetUserImages(string albumId);
     void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string imageKey);
+    void MakePublic(string albumId, string imageId, string imageKey);
 }
 
 public class UserService : IUserService
@@ -67,7 +68,7 @@ public class UserService : IUserService
         }
         else
         {
-            _context.Albums.Update(newAlbum);
+            existingRecord.UserAlias = userAlias;   //TODO: update is not working for some reason.
         }
 
         try
@@ -92,6 +93,30 @@ public class UserService : IUserService
             EncryptedData = newImageData
         };
         _context.Entries.Add(newEntry);
+        try
+        {
+            _context.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    public void MakePublic(string albumId, string imageId, string imageKey)
+    {
+        var existingAlbum = _context.Albums.SingleOrDefault(a => a.AlbumId == albumId);
+        if (existingAlbum == null)
+        {
+            throw new Exception("No such album exists.");
+        }
+        var existingImage = _context.Entries.SingleOrDefault(e => e.Id == int.Parse(imageId));
+        if (existingImage == null)
+        {
+            throw new Exception("No such image exists.");
+        }
+        existingImage.ImageKey = imageKey;
+
         try
         {
             _context.SaveChanges();

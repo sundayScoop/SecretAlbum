@@ -2,6 +2,8 @@ import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-found
 
 export const canvasWidth = 300;
 export const canvasHeight = 300;
+export const encryptedDefaultImage = new Image(150, 150);
+encryptedDefaultImage.src = "/images/encrypted2.png";
 
 export function verifyLogIn(cvk, uid) {
     if (cvk === null || uid === null) {
@@ -15,6 +17,17 @@ export function processImage(imgFile) {
     const imgInstance = new Image(150, 150);
     imgInstance.src = imgUrl;
     return imgInstance;
+}
+
+export function prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight) {
+    let canvas = document.createElement("canvas");
+    let canvasName = "myAlbumCanvas" + i.toString()
+    canvas.setAttribute("id", canvasName);
+    imageCell.appendChild(canvas)
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    return canvas
 }
 
 // source: https://alicebobandmallory.com/articles/2010/10/14/encrypt-images-in-javascript

@@ -83,5 +83,20 @@ namespace SecretAlbum.Controllers
 
         }
 
+        [HttpPost]
+        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string imageKey)
+        {
+            try
+            {
+                _userService.MakePublic(albumId, imageId, imageKey);
+                return Ok();
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+
+        }
+
     }
 }
