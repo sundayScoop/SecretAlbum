@@ -44,17 +44,16 @@ export async function upload() {
     var cvk = window.localStorage.getItem("CVK");
     var uid = window.localStorage.getItem("UID");
     verifyLogIn(cvk, uid)
-    const albumId = await await getSHA256Hash(uid + ":" + cvk) // TODO: hash it with heimdall
-    console.log(albumId)
+    const albumId = await await getSHA256Hash(uid + ":" + cvk)
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    const encryptedSeed = await encryptData(seed.toString(), BigIntToByteArray(BigInt(cvk)))
-    const imageKey = Point.g.times(seed).times(BigInt(cvk))
-    const imageKeyByteArray = BigIntToByteArray(imageKey.x)
+    const imageKey = Point.g.times(seed).getX()
+    const encryptedImageKey = await encryptData(imageKey.toString(), BigIntToByteArray(BigInt(cvk)))
+
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    const encryptedImgString = await encryptImage(imgData, imageKeyByteArray);
+    const encryptedImgString = await encryptImage(imgData, BigIntToByteArray(imageKey));
 
     // get description
     const descriptionInput = document.getElementById('descriptioninput')
@@ -62,7 +61,7 @@ export async function upload() {
 
     // send the image and description to the server
     const form = new FormData();
-    form.append("seed", encryptedSeed)
+    form.append("encKey", encryptedImageKey)
     form.append("description", description)
     form.append("encryptedImg", encryptedImgString);
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${albumId}`, {

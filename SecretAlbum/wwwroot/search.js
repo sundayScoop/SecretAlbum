@@ -56,14 +56,14 @@ export async function populateTable(table, respJson, cvk, constructTableRow) {
 
     for (var i = 0; i < respJson.length; i++) {
         const entry = respJson[i]
-        var imageCell = constructTableRow(entry.description, tbody, entry.id, entry.imageKey);
+        var imageCell = constructTableRow(entry.description, tbody, entry.id, entry.pubKey);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
         try {
-            const imageKey = BigInt(entry.imageKey)
-            const imageKeyByteArray = BigIntToByteArray(imageKey)
+            const pubKey = BigInt(entry.pubKey)
+            const imageKeyByteArray = BigIntToByteArray(pubKey)
             const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
@@ -74,7 +74,7 @@ export async function populateTable(table, respJson, cvk, constructTableRow) {
     }
 }
 
-function constructTableRowNoActions(description, tbody) {  // imageId and imageKey fields are needed here
+function constructTableRowNoActions(description, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");

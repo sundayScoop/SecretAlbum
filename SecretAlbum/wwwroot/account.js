@@ -38,7 +38,7 @@ async function populateTable(table, respJson, cvk, constructTableRow) {
 
         var imageKeyByteArray
         try {
-            imageKeyByteArray = await prepareImageKey(entry.seed, cvk)
+            imageKeyByteArray = await prepareImageKey(entry.encKey, cvk)
             const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
             var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
@@ -80,7 +80,7 @@ function createActionButton(text, requestFunc, imageId, actionCell, imageKeyByte
     actionCell.appendChild(document.createElement("br"))
 }
 
-async function requestMakePublic(imageId, imageKey) {
+async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
     const cvk = window.localStorage.getItem("CVK");
@@ -88,7 +88,7 @@ async function requestMakePublic(imageId, imageKey) {
     verifyLogIn(cvk, uid)
     const albumId = await getSHA256Hash(uid + ":" + cvk)
     form.append("imageId", imageId)
-    form.append("imageKey", imageKey)
+    form.append("pubKey", pubKey)
     const resp = await fetch(window.location.origin + `/user/makepublic?albumId=${albumId}`, {
         method: 'POST',
         body: form
@@ -100,9 +100,8 @@ async function requestDelete(imageId, imageKey) {
 
 }
 
-async function prepareImageKey(seed, cvk) {
-    const decryptedSeed = BigInt(await decryptData(seed, BigIntToByteArray(BigInt(cvk))))
-    const imageKey = Point.g.times(decryptedSeed).times(BigInt(cvk)).x
+async function prepareImageKey(encKey, cvk) {
+    const imageKey = BigInt(await decryptData(encKey, BigIntToByteArray(BigInt(cvk))))
     const imageKeyByteArray = BigIntToByteArray(imageKey)
     return imageKeyByteArray
 }

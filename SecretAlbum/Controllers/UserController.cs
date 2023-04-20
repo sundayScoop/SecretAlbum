@@ -69,11 +69,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string imageKey)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string encKey, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
         {
             try
             {
-                _userService.AddImage(albumId, seed, encryptedImg, description, "0");
+                _userService.AddImage(albumId, encKey, encryptedImg, description, "0");
                 return Ok();
             }
             catch
@@ -84,11 +84,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string imageKey)
+        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string pubKey)
         {
             try
             {
-                _userService.MakePublic(albumId, imageId, imageKey);
+                _userService.MakePublic(albumId, imageId, pubKey);
                 return Ok();
             }
             catch
