@@ -12,7 +12,6 @@ imgInput.addEventListener("change", () => {
     uploadCanvas.height = canvasHeight
     const ctx = uploadCanvas.getContext('2d');
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);         // clear the canvas
-    console.log(imgInput.files[0])
     const imgInstance = processImage(imgInput.files[0])     // convert img file to an Image instance
     imgInstance.onload = function () {
         let width = imgInstance.naturalWidth;
@@ -49,11 +48,11 @@ export async function upload() {
     // create image key and encrypt image
     const seed = RandomBigInt();
     const imageKey = Point.g.times(seed).getX()
-    const encryptedImageKey = await encryptData(imageKey.toString(), BigIntToByteArray(BigInt(cvk)))
+    const encSeed = await encryptData(seed.toString(), BigInt(cvk))
 
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    const encryptedImgString = await encryptImage(imgData, BigIntToByteArray(imageKey));
+    const encryptedImgString = await encryptImage(imgData, imageKey);
 
     // get description
     const descriptionInput = document.getElementById('descriptioninput')
@@ -61,7 +60,7 @@ export async function upload() {
 
     // send the image and description to the server
     const form = new FormData();
-    form.append("encKey", encryptedImageKey)
+    form.append("seed", encSeed)
     form.append("description", description)
     form.append("encryptedImg", encryptedImgString);
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${albumId}`, {

@@ -36,10 +36,11 @@ async function populateTable(table, respJson, cvk, constructTableRow) {
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
-        var imageKeyByteArray
+        var imageKey = 0
         try {
-            imageKeyByteArray = await prepareImageKey(entry.encKey, cvk)
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
+            const seed = BigInt(await decryptData(entry.seed, BigInt(cvk)))
+            imageKey = Point.g.times(seed).getX()
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey));
             var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }
@@ -48,8 +49,8 @@ async function populateTable(table, respJson, cvk, constructTableRow) {
         }
 
         // make action buttons
-        createActionButton("Make Public", requestMakePublic, entry.id, actionCell, imageKeyByteArray);
-        createActionButton("Delete", requestDelete, entry.id, actionCell, imageKeyByteArray);
+        createActionButton("Make Public", requestMakePublic, entry.id, actionCell, imageKey);
+        createActionButton("Delete", requestDelete, entry.id, actionCell, imageKey);
     }
 }
 
@@ -69,12 +70,12 @@ function constructTableRow(description, tbody) {
     return [imageCell, actionCell]
 }
 
-function createActionButton(text, requestFunc, imageId, actionCell, imageKeyByteArray) {
+function createActionButton(text, requestFunc, imageId, actionCell, imageKey) {
     const actionBtn = document.createElement("button");
     actionBtn.textContent = text
     actionBtn.style = 'float: right; margin: 4px'
     actionBtn.addEventListener('click', function () {
-        requestFunc(imageId, BigIntFromByteArray(imageKeyByteArray).toString());
+        requestFunc(imageId, imageKey.toString());
     })
     actionCell.appendChild(actionBtn)
     actionCell.appendChild(document.createElement("br"))
@@ -98,10 +99,4 @@ async function requestMakePublic(imageId, pubKey) {
 
 async function requestDelete(imageId, imageKey) {
 
-}
-
-async function prepareImageKey(encKey, cvk) {
-    const imageKey = BigInt(await decryptData(encKey, BigIntToByteArray(BigInt(cvk))))
-    const imageKeyByteArray = BigIntToByteArray(imageKey)
-    return imageKeyByteArray
 }

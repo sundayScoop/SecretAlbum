@@ -10,7 +10,7 @@ public interface IUserService
     List<Entry> GetSelectedAlbum(string userAlias);
     List<Entry> GetUserImages(string albumId);
     void RegisterAlbum(string albumId, string userAlias);
-    void AddImage(string albumId, string encKey, string newImageData, string description, string pubKey);
+    void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     void MakePublic(string albumId, string imageId, string pubKey);
 }
 
@@ -39,7 +39,7 @@ public class UserService : IUserService
 
         return _context.Entries
             .Where(e => e.AlbumId.Equals(albumId))
-            .Select(e => new Entry { Id = e.Id, EncKey = e.EncKey, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
+            .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
     }
 
@@ -48,7 +48,7 @@ public class UserService : IUserService
     {
         return _context.Entries
             .Where(e => e.AlbumId.Equals(albumId))
-            .Select(e => new Entry { Id = e.Id, EncKey = e.EncKey, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
+            .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
     }
 
@@ -82,13 +82,13 @@ public class UserService : IUserService
         return;
     }
 
-    public void AddImage(string albumId, string encKey, string newImageData, string description, string pubKey)
+    public void AddImage(string albumId, string seed, string newImageData, string description, string pubKey)
     {
         Entry newEntry = new Entry
         {
             AlbumId = albumId,
             Description = description,
-            EncKey = encKey,
+            Seed = seed,
             PubKey = pubKey,
             EncryptedData = newImageData
         };

@@ -63,8 +63,7 @@ export async function populateTable(table, respJson, cvk, constructTableRow) {
 
         try {
             const pubKey = BigInt(entry.pubKey)
-            const imageKeyByteArray = BigIntToByteArray(pubKey)
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKeyByteArray));
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, pubKey));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }

@@ -69,11 +69,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string encKey, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
         {
             try
             {
-                _userService.AddImage(albumId, encKey, encryptedImg, description, "0");
+                _userService.AddImage(albumId, seed, encryptedImg, description, "0");
                 return Ok();
             }
             catch

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <p>Vendor HTML page</p>
+    <script type="module">
+        import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
+        import { BigIntToByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
+
+        var cvk = RandomBigInt();
+
+        try {
+            const a = await encryptData("example", cvk);
+            console.log("encrypting with bigint succeeded: " + a)
+            const a_dec = await decryptData(a, cvk);
+            console.log("decrypting with bigint succeeded: " + a_dec)
+        }
+        catch (err) {
+            console.log("encrypting with bigint failed.")
+            console.log(err)
+        }
+
+        try {
+            const b = await encryptData("example", cvk.toString());
+            console.log("encrypting with string succeeded: " + b)
+        }
+        catch (err) {
+            console.log("encrypting with string failed.")
+            console.log(err)
+        }
+
+        try {
+            const c = await encryptData("example", BigIntToByteArray(cvk));
+            console.log("encrypting with byte array succeeded: " + c)
+        }
+        catch (err) {
+            console.log("encrypting with byte array failed.")
+            console.log(err)
+        }
+
+    </script>
+</body>
+
+</html>
