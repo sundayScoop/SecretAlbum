@@ -5,11 +5,14 @@ export const canvasHeight = 300;
 export const encryptedDefaultImage = new Image(150, 150);
 encryptedDefaultImage.src = "/images/encrypted2.png";
 
-export function verifyLogIn(cvk, uid) {
+export function verifyLogIn() {
+    var cvk = window.sessionStorage.getItem("CVK");
+    var uid = window.sessionStorage.getItem("UID");
     if (cvk === null || uid === null) {
         alert("CVK/UID not found, please log in first")
         window.location.replace(window.location.origin);
     }
+    return [uid, cvk]
 }
 
 export function processImage(imgFile) {

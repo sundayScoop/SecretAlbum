@@ -12,6 +12,7 @@ public interface IUserService
     void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     void MakePublic(string albumId, string imageId, string pubKey);
+    void ShareTo(string imageId, string shareTo, string encKey);
 }
 
 public class UserService : IUserService
@@ -68,7 +69,7 @@ public class UserService : IUserService
         }
         else
         {
-            existingRecord.UserAlias = userAlias;   //TODO: update is not working for some reason.
+            existingRecord.UserAlias = userAlias;
         }
 
         try
@@ -120,6 +121,32 @@ public class UserService : IUserService
         try
         {
             _context.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    public void ShareTo(string imageId, string shareTo, string encKey)
+    {
+        string recepientId = _context.Albums
+           .Where(a => a.UserAlias.Equals(shareTo))
+           .Select(a => a.AlbumId)
+           .ToList()[0];
+
+        Share newShare = new Share
+        {
+            ImageId = imageId,
+            ShareTo = recepientId,
+            EncKey = encKey
+        };
+        _context.Shares.Add(newShare);
+        Console.WriteLine("added context.");
+        try
+        {
+            _context.SaveChanges();
+            Console.WriteLine("Saved!");
         }
         catch (Exception e)
         {

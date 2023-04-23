@@ -89,6 +89,26 @@ namespace SecretAlbum.Controllers
             try
             {
                 _userService.MakePublic(albumId, imageId, pubKey);
+
+                // TODO: clear the share table of the entries containing specified albumId
+                return Ok();
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+
+        }
+
+        [HttpPost]
+        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
+        {
+            try
+            {
+                // TODO: check if imageId belongs to album with albumId.
+
+
+                _userService.ShareTo(imageId, shareTo, encKey);
                 return Ok();
             }
             catch

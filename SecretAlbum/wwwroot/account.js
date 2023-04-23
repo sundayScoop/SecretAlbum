@@ -5,9 +5,7 @@ import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.ne
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 
 export async function showMyAlbum() {
-    var cvk = window.localStorage.getItem("CVK");
-    var uid = window.localStorage.getItem("UID");
-    verifyLogIn(cvk, uid)
+    const [uid, cvk] = verifyLogIn()
     const albumId = await getSHA256Hash(uid + ":" + cvk)
 
     // request my images from server
@@ -49,8 +47,9 @@ async function populateTable(table, respJson, cvk, constructTableRow) {
         }
 
         // make action buttons
-        createActionButton("Make Public", requestMakePublic, entry.id, actionCell, imageKey);
-        createActionButton("Delete", requestDelete, entry.id, actionCell, imageKey);
+        createMakePublicButton("Make Public", entry.id, actionCell, imageKey);
+        createShareWithButton("Share With", entry.id, actionCell, imageKey);
+        createDeleteButton("Delete", entry.id, actionCell, imageKey);
     }
 }
 
@@ -70,12 +69,12 @@ function constructTableRow(description, tbody) {
     return [imageCell, actionCell]
 }
 
-function createActionButton(text, requestFunc, imageId, actionCell, imageKey) {
+function createMakePublicButton(text, imageId, actionCell, imageKey) {
     const actionBtn = document.createElement("button");
     actionBtn.textContent = text
     actionBtn.style = 'float: right; margin: 4px'
     actionBtn.addEventListener('click', function () {
-        requestFunc(imageId, imageKey.toString());
+        requestMakePublic(imageId, imageKey.toString());
     })
     actionCell.appendChild(actionBtn)
     actionCell.appendChild(document.createElement("br"))
@@ -84,9 +83,7 @@ function createActionButton(text, requestFunc, imageId, actionCell, imageKey) {
 async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
-    const cvk = window.localStorage.getItem("CVK");
-    const uid = window.localStorage.getItem("UID");
-    verifyLogIn(cvk, uid)
+    const [uid, cvk] = verifyLogIn()
     const albumId = await getSHA256Hash(uid + ":" + cvk)
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
@@ -95,6 +92,44 @@ async function requestMakePublic(imageId, pubKey) {
         body: form
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
+}
+
+function createShareWithButton(text, imageId, actionCell, imageKey) {
+    const actionBtn = document.createElement("button");
+    actionBtn.textContent = text
+    actionBtn.style = 'float: right; margin: 4px'
+    actionBtn.addEventListener('click', function () {
+        requestShareWith(imageId, "test5");
+    })
+    actionCell.appendChild(actionBtn)
+    actionCell.appendChild(document.createElement("br"))
+}
+
+async function requestShareWith(imageId, shareTo) {
+    // request my images from server
+    const form = new FormData();
+    const [uid, cvk] = verifyLogIn()
+    const albumId = await getSHA256Hash(uid + ":" + cvk)
+    form.append("imageId", imageId)
+    form.append("shareTo", shareTo)
+    // TODO: implement encKey = G * cvk_i * seed
+    form.append("encKey", "thisisatest")
+    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${albumId}`, {
+        method: 'POST',
+        body: form
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+}
+
+function createDeleteButton(text, imageId, actionCell, imageKey) {
+    const actionBtn = document.createElement("button");
+    actionBtn.textContent = text
+    actionBtn.style = 'float: right; margin: 4px'
+    actionBtn.addEventListener('click', function () {
+        requestDelete(imageId, imageKey.toString());
+    })
+    actionCell.appendChild(actionBtn)
+    actionCell.appendChild(document.createElement("br"))
 }
 
 async function requestDelete(imageId, imageKey) {

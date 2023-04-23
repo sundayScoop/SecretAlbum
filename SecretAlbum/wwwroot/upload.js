@@ -40,9 +40,7 @@ function getNewSizeAndPlacement(width, height) {
 }
 
 export async function upload() {
-    var cvk = window.localStorage.getItem("CVK");
-    var uid = window.localStorage.getItem("UID");
-    verifyLogIn(cvk, uid)
+    const [uid, cvk] = verifyLogIn()
     const albumId = await await getSHA256Hash(uid + ":" + cvk)
 
     // create image key and encrypt image
