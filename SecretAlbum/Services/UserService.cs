@@ -6,9 +6,11 @@ using System.Data.SqlTypes;
 
 public interface IUserService
 {
+    string GetUserId(string userAlias);
     List<string> GetAlbums();
     List<Entry> GetSelectedAlbum(string userAlias);
     List<Entry> GetUserImages(string albumId);
+    List<Share> GetShares(string shareTo);
     void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     void MakePublic(string albumId, string imageId, string pubKey);
@@ -23,6 +25,15 @@ public class UserService : IUserService
     {
         _context = context;
     }
+
+    public string GetUserId(string userAlias)
+    {
+        Album matchingAlbum = _context.Albums
+            .First(a => a.UserAlias.Equals(userAlias));
+
+        return matchingAlbum.AlbumId;
+    }
+
 
     public List<string> GetAlbums()
     {
@@ -50,6 +61,14 @@ public class UserService : IUserService
         return _context.Entries
             .Where(e => e.AlbumId.Equals(albumId))
             .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
+            .ToList();
+    }
+
+    public List<Share> GetShares(string shareTo)
+    {
+        return _context.Shares
+            .Where(s => s.ShareTo.Equals(shareTo))
+            .Select(s => new Share { ImageId = s.ImageId, EncKey = s.EncKey })
             .ToList();
     }
 
@@ -142,11 +161,9 @@ public class UserService : IUserService
             EncKey = encKey
         };
         _context.Shares.Add(newShare);
-        Console.WriteLine("added context.");
         try
         {
             _context.SaveChanges();
-            Console.WriteLine("Saved!");
         }
         catch (Exception e)
         {

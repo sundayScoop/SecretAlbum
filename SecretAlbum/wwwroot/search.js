@@ -3,13 +3,9 @@ import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, pr
 
 export async function queryAlbums() {
     registerAlbum()
-
-    const userAlias = window.sessionStorage.getItem("userAlias");
     verifyLogIn()
 
     // query available user aliases from the server 
-    const form = new FormData();
-    form.append("userAlias", userAlias)
     const resp = await fetch(window.location.origin + `/user/getalbums`, {
         method: 'GET',
     });
@@ -31,39 +27,61 @@ export async function getSelectedAlbum() {
 
     const dropdown = document.getElementById("dropdown")
     const userChosen = dropdown.value
-    const resp = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userChosen}`, {
+
+    // request selected album from server
+    const respGetAlbum = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userChosen}`, {
         method: 'GET',
     });
-    if (!resp.ok) alert("Something went wrong with uploading the image");
-    const respText = await resp.text();
-    if (respText == "--FAILED--") alert("failed.")
-    const respJson = JSON.parse(respText);
+    if (!respGetAlbum.ok) alert("Something went wrong when requesting for the selected album.");
+    const respGetAlbumText = await respGetAlbum.text();
+    if (respGetAlbumText == "--FAILED--") alert("failed.")
+    const respGetAlbumJson = JSON.parse(respGetAlbumText);
+
+    // request the user's shares on the server
+    const respGetShares = await fetch(window.location.origin + `/user/getShares?shareTo=${uid}&albumId=0`, {
+        method: 'GET',
+    });
+    if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
+    const respGetSharesText = await respGetShares.text();
+    var respGetSharesJson = JSON.parse(respGetSharesText);
+    var sharesList = []
+    for (var i = 0; i < respGetSharesJson.length; i++) {
+        const imageId = respGetSharesJson[i].imageId
+        const encKey = respGetSharesJson[i].encKey
+        const share = [imageId, encKey]
+        sharesList.push(share)
+    }
+    const sharesMap = new Map(sharesList);
 
     var selectedAlbumText = document.getElementById("selectedalbumtext");
     selectedAlbumText.textContent = "Viewing " + userChosen + "'s album"
 
     var table = document.getElementById("viewtbl");
-    populateTable(table, respJson, cvk, constructTableRowNoActions)
+    populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions)
 }
 
-export async function populateTable(table, respJson, cvk, constructTableRow) {
+export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRow) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
-    for (var i = 0; i < respJson.length; i++) {
-        const entry = respJson[i]
-        var imageCell = constructTableRow(entry.description, tbody, entry.id, entry.pubKey);
+    for (var i = 0; i < respGetAlbumJson.length; i++) {
+        const entry = respGetAlbumJson[i]
+        var imageCell = constructTableRowNoActions(entry.description, tbody, entry.id, entry.pubKey);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
-        try {
+        if (entry.pubKey != "0") {
             const pubKey = BigInt(entry.pubKey)
             const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, pubKey));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }
-        catch {
+        else if (sharesMap.size > 0) {
+            // TODO: decrypt image using the correct share key
+            console.log("sharemap size > 0")
+        }
+        else {
             ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
         }
     }
@@ -88,11 +106,10 @@ function constructTableRowNoActions(description, tbody) {
 export async function registerAlbum() {
     const userAlias = window.sessionStorage.getItem("userAlias");
     const [uid, cvk] = verifyLogIn()
-    const albumId = await getSHA256Hash(uid + ":" + cvk)
 
     const form = new FormData();
     form.append("userAlias", userAlias)
-    const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${albumId}`, {
+    const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${uid}`, {
         method: 'POST',
         body: form
     });

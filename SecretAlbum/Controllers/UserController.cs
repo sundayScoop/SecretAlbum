@@ -15,6 +15,19 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetUserId([FromQuery] string userAlias)
+        {
+            try
+            {
+                return Ok(_userService.GetUserId(userAlias));
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+        }
+
+        [HttpGet]
         public IActionResult GetAlbums()
         {
             try
@@ -61,6 +74,19 @@ namespace SecretAlbum.Controllers
             try
             {
                 return Ok(_userService.GetUserImages(albumId));
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetShares([FromQuery] string shareTo)
+        {
+            try
+            {
+                return Ok(_userService.GetShares(shareTo));
             }
             catch
             {

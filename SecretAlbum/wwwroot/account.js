@@ -6,10 +6,9 @@ import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, pr
 
 export async function showMyAlbum() {
     const [uid, cvk] = verifyLogIn()
-    const albumId = await getSHA256Hash(uid + ":" + cvk)
 
     // request my images from server
-    const resp = await fetch(window.location.origin + `/user/getimages?albumId=${albumId}`);
+    const resp = await fetch(window.location.origin + `/user/getimages?albumId=${uid}`);
     const respText = await resp.text();
     if (respText == "--FAILED--") {
         alert("failed.")
@@ -19,10 +18,10 @@ export async function showMyAlbum() {
 
     // set up the table and clear it
     var table = document.getElementById("myalbumtbl");
-    populateTable(table, respJson, cvk, constructTableRow)
+    populateTable(table, respJson, uid, cvk, constructTableRow)
 }
 
-async function populateTable(table, respJson, cvk, constructTableRow) {
+async function populateTable(table, respJson, uid, cvk, constructTableRow) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
@@ -34,21 +33,15 @@ async function populateTable(table, respJson, cvk, constructTableRow) {
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
-        var imageKey = 0
-        try {
-            const seed = BigInt(await decryptData(entry.seed, BigInt(cvk)))
-            imageKey = Point.g.times(seed).getX()
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey));
-            var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
-            ctx.putImageData(imgData, 0, 0)
-        }
-        catch {
-            ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
-        }
+        const seed = BigInt(await decryptData(entry.seed, BigInt(cvk)));
+        const imageKey = Point.g.times(seed).toArray()
+        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey));
+        var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+        ctx.putImageData(imgData, 0, 0)
 
         // make action buttons
         createMakePublicButton("Make Public", entry.id, actionCell, imageKey);
-        createShareWithButton("Share With", entry.id, actionCell, imageKey);
+        createShareWithButton("Share With", entry.id, actionCell, seed);
         createDeleteButton("Delete", entry.id, actionCell, imageKey);
     }
 }
@@ -84,41 +77,68 @@ async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const albumId = await getSHA256Hash(uid + ":" + cvk)
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
-    const resp = await fetch(window.location.origin + `/user/makepublic?albumId=${albumId}`, {
+    const resp = await fetch(window.location.origin + `/user/makepublic?albumId=${uid}`, {
         method: 'POST',
         body: form
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
 }
 
-function createShareWithButton(text, imageId, actionCell, imageKey) {
+function createShareWithButton(text, imageId, actionCell, seed) {
     const actionBtn = document.createElement("button");
     actionBtn.textContent = text
     actionBtn.style = 'float: right; margin: 4px'
-    actionBtn.addEventListener('click', function () {
-        requestShareWith(imageId, "test5");
+    actionBtn.addEventListener('click', async function () {
+        const list = await getUserAliases()
+        const selectedUser = prompt(list.toString(), "Harry Potter");
+        requestShareWith(imageId, selectedUser, seed);
     })
     actionCell.appendChild(actionBtn)
     actionCell.appendChild(document.createElement("br"))
 }
 
-async function requestShareWith(imageId, shareTo) {
-    // request my images from server
+async function getUserAliases() {
+    // query available user aliases from the server 
+    const resp = await fetch(window.location.origin + `/user/getalbums`, {
+        method: 'GET',
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+
+    const respText = await resp.text();
+    if (respText == "--FAILED--") {
+        alert("failed.")
+        return
+    }
+    const respJson = JSON.parse(respText)
+    return respJson;
+}
+
+async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const albumId = await getSHA256Hash(uid + ":" + cvk)
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
-    // TODO: implement encKey = G * cvk_i * seed
-    form.append("encKey", "thisisatest")
-    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${albumId}`, {
+    const userPubKey = await getUserPubKey(shareTo)
+    form.append("encKey", (userPubKey.times(seed)).toBase64())
+    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}`, {
         method: 'POST',
         body: form
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
+
+}
+
+async function getUserPubKey(selectedUser) {
+    const respUserId = await fetch(window.location.origin + `/user/getUserId?userAlias=${selectedUser}`, {
+        method: 'GET'
+    });
+    const userId = await respUserId.text()
+    const respSim = await fetch(`https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/${userId}`);
+    if (!respSim.ok) throw Error("Start Key Exchange: Could not find UID's entry at simulator");
+    const respSimJson = await respSim.json();
+    return Point.fromB64(respSimJson.public);
 }
 
 function createDeleteButton(text, imageId, actionCell, imageKey) {

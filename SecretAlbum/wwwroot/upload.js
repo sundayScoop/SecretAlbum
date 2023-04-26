@@ -41,11 +41,11 @@ function getNewSizeAndPlacement(width, height) {
 
 export async function upload() {
     const [uid, cvk] = verifyLogIn()
-    const albumId = await await getSHA256Hash(uid + ":" + cvk)
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    const imageKey = Point.g.times(seed).getX()
+    // const imageKey = Point.g.times(seed).getX()
+    const imageKey = Point.g.times(seed).toArray()
     const encSeed = await encryptData(seed.toString(), BigInt(cvk))
 
     var ctx = uploadCanvas.getContext('2d');
@@ -61,7 +61,7 @@ export async function upload() {
     form.append("seed", encSeed)
     form.append("description", description)
     form.append("encryptedImg", encryptedImgString);
-    const resp = await fetch(window.location.origin + `/user/addImage?albumId=${albumId}`, {
+    const resp = await fetch(window.location.origin + `/user/addImage?albumId=${uid}`, {
         method: 'POST',
         body: form
     });
