@@ -42,7 +42,7 @@ async function populateTable(table, respJson, uid, cvk, constructTableRow) {
         // make action buttons
         createMakePublicButton("Make Public", entry.id, actionCell, imageKey);
         createShareWithButton("Share With", entry.id, actionCell, seed);
-        createDeleteButton("Delete", entry.id, actionCell, imageKey);
+        createDeleteButton("Delete", entry.id, actionCell);
     }
 }
 
@@ -141,17 +141,17 @@ async function getUserPubKey(selectedUser) {
     return Point.fromB64(respSimJson.public);
 }
 
-function createDeleteButton(text, imageId, actionCell, imageKey) {
+function createDeleteButton(text, imageId, actionCell) {
     const actionBtn = document.createElement("button");
     actionBtn.textContent = text
     actionBtn.style = 'float: right; margin: 4px'
     actionBtn.addEventListener('click', function () {
-        requestDelete(imageId, imageKey.toString());
+        requestDelete(imageId);
     })
     actionCell.appendChild(actionBtn)
     actionCell.appendChild(document.createElement("br"))
 }
 
-async function requestDelete(imageId, imageKey) {
+async function requestDelete(imageId) {
 
 }

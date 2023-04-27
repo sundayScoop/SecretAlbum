@@ -1,5 +1,7 @@
 import { BigIntToByteArray } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
+import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
+import { signIn, signUp, AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
 export async function queryAlbums() {
     registerAlbum()
@@ -60,7 +62,7 @@ export async function getSelectedAlbum() {
     populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions)
 }
 
-export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRow) {
+export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
@@ -77,9 +79,12 @@ export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, con
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }
-        else if (sharesMap.size > 0) {
-            // TODO: decrypt image using the correct share key
-            console.log("sharemap size > 0")
+        else if (sharesMap.get(entry.id.toString())) { // decrypt image using the correct share key
+            const encKeyPersonal = Point.fromB64(sharesMap.get(entry.id.toString()))
+            const encKey = encKeyPersonal.times(Utils.mod_inv(BigInt(cvk)))
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, encKey.toArray()));
+            const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+            ctx.putImageData(imgData, 0, 0)
         }
         else {
             ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
