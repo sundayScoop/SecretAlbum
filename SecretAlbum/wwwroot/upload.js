@@ -44,13 +44,12 @@ export async function upload() {
 
     // create image key and encrypt image
     const seed = RandomBigInt();
-    // const imageKey = Point.g.times(seed).getX()
-    const imageKey = Point.g.times(seed).toArray()
+    const imageKey = Point.g.times(seed)
     const encSeed = await encryptData(seed.toString(), BigInt(cvk))
 
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    const encryptedImgString = await encryptImage(imgData, imageKey);
+    const encryptedImgString = await encryptImage(imgData, imageKey.toArray());
 
     // get description
     const descriptionInput = document.getElementById('descriptioninput')

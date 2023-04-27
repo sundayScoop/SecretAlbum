@@ -82,11 +82,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetShares([FromQuery] string shareTo)
+        public IActionResult GetShares([FromQuery] string shareTo, [FromQuery] string albumId)
         {
             try
             {
-                return Ok(_userService.GetShares(shareTo));
+                return Ok(_userService.GetShares(shareTo, albumId));
             }
             catch
             {
@@ -127,14 +127,14 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
+        public IActionResult ShareTo([FromForm] string albumId, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
         {
             try
             {
                 // TODO: check if imageId belongs to album with albumId.
 
 
-                _userService.ShareTo(imageId, shareTo, encKey);
+                _userService.ShareTo(albumId, imageId, shareTo, encKey);
                 return Ok();
             }
             catch

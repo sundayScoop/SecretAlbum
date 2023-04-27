@@ -10,11 +10,11 @@ public interface IUserService
     List<string> GetAlbums();
     List<Entry> GetSelectedAlbum(string userAlias);
     List<Entry> GetUserImages(string albumId);
-    List<Share> GetShares(string shareTo);
+    List<Share> GetShares(string shareTo, string albumId);
     void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     void MakePublic(string albumId, string imageId, string pubKey);
-    void ShareTo(string imageId, string shareTo, string encKey);
+    void ShareTo(string albumId, string imageId, string shareTo, string encKey);
 }
 
 public class UserService : IUserService
@@ -64,17 +64,16 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public List<Share> GetShares(string shareTo)
+    public List<Share> GetShares(string shareTo, string albumId)
     {
         return _context.Shares
-            .Where(s => s.ShareTo.Equals(shareTo))
+            .Where(s => s.ShareTo.Equals(shareTo) && s.AlbumId.Equals(albumId))
             .Select(s => new Share { ImageId = s.ImageId, EncKey = s.EncKey })
             .ToList();
     }
 
     public void RegisterAlbum(string albumId, string userAlias)
     {
-        // TODO: add entry to album database. make sure only one entry per albumId exists (albumId is primary key)
         Album newAlbum = new Album
         {
             AlbumId = albumId,
@@ -147,7 +146,7 @@ public class UserService : IUserService
         }
     }
 
-    public void ShareTo(string imageId, string shareTo, string encKey)
+    public void ShareTo(string albumId, string imageId, string shareTo, string encKey)
     {
         string recepientId = _context.Albums
            .Where(a => a.UserAlias.Equals(shareTo))
@@ -156,6 +155,7 @@ public class UserService : IUserService
 
         Share newShare = new Share
         {
+            AlbumId = albumId,
             ImageId = imageId,
             ShareTo = recepientId,
             EncKey = encKey

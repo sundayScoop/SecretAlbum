@@ -1,5 +1,4 @@
 import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
-import { BigIntToByteArray, BigIntFromByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
@@ -34,8 +33,8 @@ async function populateTable(table, respJson, uid, cvk, constructTableRow) {
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
         const seed = BigInt(await decryptData(entry.seed, BigInt(cvk)));
-        const imageKey = Point.g.times(seed).toArray()
-        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey));
+        const imageKey = Point.g.times(seed)
+        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey.toArray()));
         var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
         ctx.putImageData(imgData, 0, 0)
 
@@ -67,7 +66,7 @@ function createMakePublicButton(text, imageId, actionCell, imageKey) {
     actionBtn.textContent = text
     actionBtn.style = 'float: right; margin: 4px'
     actionBtn.addEventListener('click', function () {
-        requestMakePublic(imageId, imageKey.toString());
+        requestMakePublic(imageId, imageKey.toBase64());
     })
     actionCell.appendChild(actionBtn)
     actionCell.appendChild(document.createElement("br"))
@@ -118,6 +117,7 @@ async function getUserAliases() {
 async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
+    form.append("albumId", uid)
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
     const userPubKey = await getUserPubKey(shareTo)

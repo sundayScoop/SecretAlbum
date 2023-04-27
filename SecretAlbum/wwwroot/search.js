@@ -40,7 +40,7 @@ export async function getSelectedAlbum() {
     const respGetAlbumJson = JSON.parse(respGetAlbumText);
 
     // request the user's shares on the server
-    const respGetShares = await fetch(window.location.origin + `/user/getShares?shareTo=${uid}&albumId=0`, {
+    const respGetShares = await fetch(window.location.origin + `/user/getShares?shareTo=${uid}&albumId=a4e624d686e03ed2767c0abd85c14426b0b1157d2ce81d27bb4fe4f6f01d688a`, {    //TODO: change albumId to ${userChosen}
         method: 'GET',
     });
     if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
@@ -74,8 +74,8 @@ export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, con
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
         if (entry.pubKey != "0") {
-            const pubKey = BigInt(entry.pubKey)
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, pubKey));
+            const pubKey = Point.fromB64(entry.pubKey)
+            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, pubKey.toArray()));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }
@@ -127,6 +127,7 @@ function refreshDropdownOptions(respJson) {
     for (var i = options.length; i > 0; i--) {
         options[i - 1].remove()
     }
+    // TODO: value of the option should be uids, not aliases.
     for (var i = 0; i < respJson.length; i++) {
         const name = respJson[i]
         const option = document.createElement("option");
