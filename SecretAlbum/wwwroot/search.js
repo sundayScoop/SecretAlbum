@@ -1,4 +1,3 @@
-import { BigIntToByteArray } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
@@ -18,20 +17,20 @@ export async function queryAlbums() {
         alert("failed.")
         return
     }
-    const respJson = JSON.parse(respText)
+    const respJsonList = JSON.parse(respText)
 
     // refresh dropdown
-    refreshDropdownOptions(respJson)
+    refreshDropdownOptions(respJsonList)
 }
 
 export async function getSelectedAlbum() {
     const [uid, cvk] = verifyLogIn()
 
     const dropdown = document.getElementById("dropdown")
-    const userChosen = dropdown.value
+    const albumChosen = dropdown.value
 
     // request selected album from server
-    const respGetAlbum = await fetch(window.location.origin + `/user/getselectedalbum?userAlias=${userChosen}`, {
+    const respGetAlbum = await fetch(window.location.origin + `/user/getimages?albumId=${albumChosen}`, {
         method: 'GET',
     });
     if (!respGetAlbum.ok) alert("Something went wrong when requesting for the selected album.");
@@ -40,7 +39,7 @@ export async function getSelectedAlbum() {
     const respGetAlbumJson = JSON.parse(respGetAlbumText);
 
     // request the user's shares on the server
-    const respGetShares = await fetch(window.location.origin + `/user/getShares?shareTo=${uid}&albumId=a4e624d686e03ed2767c0abd85c14426b0b1157d2ce81d27bb4fe4f6f01d688a`, {    //TODO: change albumId to ${userChosen}
+    const respGetShares = await fetch(window.location.origin + `/user/getShares?shareTo=${uid}&albumId=${albumChosen}`, {    //TODO: change albumId to ${albumChosen}
         method: 'GET',
     });
     if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
@@ -55,8 +54,10 @@ export async function getSelectedAlbum() {
     }
     const sharesMap = new Map(sharesList);
 
-    var selectedAlbumText = document.getElementById("selectedalbumtext");
-    selectedAlbumText.textContent = "Viewing " + userChosen + "'s album"
+    // display text indicating which album the user is currently viewing
+    const selectedAlbumText = document.getElementById("selectedalbumtext");
+    const aliasChosen = dropdown.options[dropdown.selectedIndex].text
+    selectedAlbumText.textContent = "Viewing " + aliasChosen + "'s album"
 
     var table = document.getElementById("viewtbl");
     populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions)
@@ -121,17 +122,18 @@ export async function registerAlbum() {
     if (!resp.ok) alert("Something went wrong with uploading the image");
 }
 
-function refreshDropdownOptions(respJson) {
+function refreshDropdownOptions(respJsonList) {
     var dropdown = document.getElementById("dropdown")
     var options = dropdown.options
     for (var i = options.length; i > 0; i--) {
         options[i - 1].remove()
     }
-    // TODO: value of the option should be uids, not aliases.
-    for (var i = 0; i < respJson.length; i++) {
-        const name = respJson[i]
+    for (var i = 0; i < respJsonList.length; i++) {
+        const json = respJsonList[i]
+        const albumId = json.albumId
+        const name = json.userAlias
         const option = document.createElement("option");
-        option.value = name;
+        option.value = albumId;
         option.textContent = name;
         dropdown.appendChild(option)
     }

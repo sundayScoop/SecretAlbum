@@ -7,8 +7,8 @@ using System.Data.SqlTypes;
 public interface IUserService
 {
     string GetUserId(string userAlias);
-    List<string> GetAlbums();
-    List<Entry> GetSelectedAlbum(string userAlias);
+    List<Album> GetAlbums();
+    // List<Entry> GetSelectedAlbum(string albumId);
     List<Entry> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
     void RegisterAlbum(string albumId, string userAlias);
@@ -35,25 +35,25 @@ public class UserService : IUserService
     }
 
 
-    public List<string> GetAlbums()
+    public List<Album> GetAlbums()
     {
         return _context.Albums
-            .Select(a => a.UserAlias)
+            .Select(a => new Album { AlbumId = a.AlbumId, UserAlias = a.UserAlias })
             .ToList();
     }
 
-    public List<Entry> GetSelectedAlbum(string userAlias)
-    {
-        string albumId = _context.Albums
-            .Where(a => a.UserAlias.Equals(userAlias))
-            .Select(a => a.AlbumId)
-            .ToList()[0];
+    // public List<Entry> GetSelectedAlbum(string userAlias)
+    // {
+    //     string albumId = _context.Albums
+    //         .Where(a => a.UserAlias.Equals(userAlias))
+    //         .Select(a => a.AlbumId)
+    //         .ToList()[0];
 
-        return _context.Entries
-            .Where(e => e.AlbumId.Equals(albumId))
-            .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
-            .ToList();
-    }
+    //     return _context.Entries
+    //         .Where(e => e.AlbumId.Equals(albumId))
+    //         .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
+    //         .ToList();
+    // }
 
 
     public List<Entry> GetUserImages(string albumId)

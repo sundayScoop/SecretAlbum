@@ -40,18 +40,18 @@ namespace SecretAlbum.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult GetSelectedAlbum([FromQuery] string userAlias)
-        {
-            try
-            {
-                return Ok(_userService.GetSelectedAlbum(userAlias));
-            }
-            catch
-            {
-                return Ok("--FAILED--");
-            }
-        }
+        // [HttpGet]
+        // public IActionResult GetSelectedAlbum([FromQuery] string albumId)
+        // {
+        //     try
+        //     {
+        //         return Ok(_userService.GetSelectedAlbum(albumId));
+        //     }
+        //     catch
+        //     {
+        //         return Ok("--FAILED--");
+        //     }
+        // }
 
         [HttpPost]
         public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string userAlias)
