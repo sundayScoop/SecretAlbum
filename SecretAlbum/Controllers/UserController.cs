@@ -40,19 +40,6 @@ namespace SecretAlbum.Controllers
             }
         }
 
-        // [HttpGet]
-        // public IActionResult GetSelectedAlbum([FromQuery] string albumId)
-        // {
-        //     try
-        //     {
-        //         return Ok(_userService.GetSelectedAlbum(albumId));
-        //     }
-        //     catch
-        //     {
-        //         return Ok("--FAILED--");
-        //     }
-        // }
-
         [HttpPost]
         public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string userAlias)
         {
@@ -87,6 +74,19 @@ namespace SecretAlbum.Controllers
             try
             {
                 return Ok(_userService.GetShares(shareTo, albumId));
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetSharesForAlbum([FromQuery] string albumId)
+        {
+            try
+            {
+                return Ok(_userService.GetSharesForAlbum(albumId));
             }
             catch
             {

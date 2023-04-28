@@ -7,27 +7,50 @@ export async function showMyAlbum() {
     const [uid, cvk] = verifyLogIn()
 
     // request my images from server
-    const resp = await fetch(window.location.origin + `/user/getimages?albumId=${uid}`);
-    const respText = await resp.text();
-    if (respText == "--FAILED--") {
+    const respGetImages = await fetch(window.location.origin + `/user/getimages?albumId=${uid}`);
+    const respGetImagesText = await respGetImages.text();
+    if (respGetImagesText == "--FAILED--") {
         alert("failed.")
         return
     }
-    const respJson = JSON.parse(respText);
+    const respGetImagesJson = JSON.parse(respGetImagesText);
+
+    // request the user's shares on the server
+    const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum?albumId=${uid}`, {
+        method: 'GET',
+    });
+    if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
+    const respGetSharesText = await respGetShares.text();
+    var respGetSharesJson = JSON.parse(respGetSharesText);
+    var sharesList = []
+    for (var i = 0; i < respGetSharesJson.length; i++) {
+        const imageId = respGetSharesJson[i]
+        const share = [imageId, null]
+        sharesList.push(share)
+    }
+    const sharesMap = new Map(sharesList);
 
     // set up the table and clear it
     var table = document.getElementById("myalbumtbl");
-    populateTable(table, respJson, uid, cvk, constructTableRow)
+    populateTable(table, respGetImagesJson, sharesMap, uid, cvk, constructTableRow)
 }
 
-async function populateTable(table, respJson, uid, cvk, constructTableRow) {
+async function populateTable(table, respGetImagesJson, sharesMap, uid, cvk, constructTableRow) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
-    for (var i = 0; i < respJson.length; i++) {
-        const entry = respJson[i]
+    for (var i = 0; i < respGetImagesJson.length; i++) {
+        const entry = respGetImagesJson[i]
 
-        var [imageCell, actionCell] = constructTableRow(entry.description, tbody);
+        let imageStatus = "private";
+        if (entry.pubKey != "0") {
+            imageStatus = "public"
+        }
+        else if (sharesMap.get(entry.id.toString())) {
+            imageStatus = "shared with you"
+        }
+
+        var [imageCell, actionCell] = constructTableRow(entry.description, imageStatus, tbody);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
@@ -45,11 +68,12 @@ async function populateTable(table, respJson, uid, cvk, constructTableRow) {
     }
 }
 
-function constructTableRow(description, tbody) {
+function constructTableRow(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
-    descriptionCell.textContent = description;
+    descriptionCell.style = "vertical-align: top; white-space: pre;"
+    descriptionCell.textContent = "Status: " + imageStatus + "\r\n\r\n" + description;
     const actionCell = document.createElement("td");
     actionCell.style = "vertical-align: top;"
 
@@ -92,6 +116,7 @@ function createShareWithButton(text, imageId, actionCell, seed) {
     actionBtn.addEventListener('click', async function () {
         const list = await getUserAliases()
         const selectedUser = prompt(list.toString(), "Harry Potter");
+        if (!selectedUser) return;
         requestShareWith(imageId, selectedUser, seed);
     })
     actionCell.appendChild(actionBtn)
@@ -111,7 +136,8 @@ async function getUserAliases() {
         return
     }
     const respJson = JSON.parse(respText)
-    return respJson;
+    let list = respJson.map(({ userAlias }) => userAlias);
+    return list;
 }
 
 async function requestShareWith(imageId, shareTo, seed) {

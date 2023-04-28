@@ -53,6 +53,7 @@ export async function getSelectedAlbum() {
         sharesList.push(share)
     }
     const sharesMap = new Map(sharesList);
+    console.log(sharesMap)
 
     // display text indicating which album the user is currently viewing
     const selectedAlbumText = document.getElementById("selectedalbumtext");
@@ -60,16 +61,25 @@ export async function getSelectedAlbum() {
     selectedAlbumText.textContent = "Viewing " + aliasChosen + "'s album"
 
     var table = document.getElementById("viewtbl");
-    populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions)
+    populateTable(table, respGetAlbumJson, sharesMap, uid, cvk, constructTableRowNoActions)
 }
 
-export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, constructTableRowNoActions) {
+export async function populateTable(table, respGetAlbumJson, sharesMap, uid, cvk, constructTableRowNoActions) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respGetAlbumJson.length; i++) {
         const entry = respGetAlbumJson[i]
-        var imageCell = constructTableRowNoActions(entry.description, tbody, entry.id, entry.pubKey);
+
+        let imageStatus = "private";
+        if (entry.pubKey != "0") {
+            imageStatus = "public"
+        }
+        else if (sharesMap.get(entry.id.toString())) {
+            imageStatus = "shared with you"
+        }
+
+        var imageCell = constructTableRowNoActions(entry.description, imageStatus, tbody);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
@@ -93,11 +103,12 @@ export async function populateTable(table, respGetAlbumJson, sharesMap, cvk, con
     }
 }
 
-function constructTableRowNoActions(description, tbody) {
+function constructTableRowNoActions(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
-    descriptionCell.textContent = description;
+    descriptionCell.style = "vertical-align: top; white-space: pre;"
+    descriptionCell.textContent = "Status: " + imageStatus + "\r\n\r\n" + description;
     const actionCell = document.createElement("td");
     actionCell.style = "vertical-align: top;"
 

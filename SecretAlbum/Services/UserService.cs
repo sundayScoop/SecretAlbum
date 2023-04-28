@@ -8,9 +8,9 @@ public interface IUserService
 {
     string GetUserId(string userAlias);
     List<Album> GetAlbums();
-    // List<Entry> GetSelectedAlbum(string albumId);
     List<Entry> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
+    List<string> GetSharesForAlbum(string albumId);
     void RegisterAlbum(string albumId, string userAlias);
     void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     void MakePublic(string albumId, string imageId, string pubKey);
@@ -42,20 +42,6 @@ public class UserService : IUserService
             .ToList();
     }
 
-    // public List<Entry> GetSelectedAlbum(string userAlias)
-    // {
-    //     string albumId = _context.Albums
-    //         .Where(a => a.UserAlias.Equals(userAlias))
-    //         .Select(a => a.AlbumId)
-    //         .ToList()[0];
-
-    //     return _context.Entries
-    //         .Where(e => e.AlbumId.Equals(albumId))
-    //         .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
-    //         .ToList();
-    // }
-
-
     public List<Entry> GetUserImages(string albumId)
     {
         return _context.Entries
@@ -69,6 +55,14 @@ public class UserService : IUserService
         return _context.Shares
             .Where(s => s.ShareTo.Equals(shareTo) && s.AlbumId.Equals(albumId))
             .Select(s => new Share { ImageId = s.ImageId, EncKey = s.EncKey })
+            .ToList();
+    }
+
+    public List<string> GetSharesForAlbum(string albumId)
+    {
+        return _context.Shares
+            .Where(s => s.AlbumId.Equals(albumId))
+            .Select(s => s.ImageId).Distinct()
             .ToList();
     }
 
