@@ -17,7 +17,7 @@ namespace SecretAlbum.Helpers
             options.UseSqlite(Configuration.GetConnectionString("LocalDbConnectionString"));
         }
 
-        public DbSet<Entry> Entries { get; set; }
+        public DbSet<Image> Images { get; set; }
         public DbSet<Album> Albums { get; set; }
         public DbSet<Share> Shares { get; set; }
 

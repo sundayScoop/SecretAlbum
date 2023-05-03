@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SecretAlbum
 {
-    public class Entry
+    public class Image
     {
         [Key]
         public int Id { get; set; }

@@ -68,31 +68,31 @@ export async function populateTable(table, respGetAlbumJson, sharesMap, uid, cvk
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respGetAlbumJson.length; i++) {
-        const entry = respGetAlbumJson[i]
+        const image = respGetAlbumJson[i]
 
         let imageStatus = "private";
-        if (entry.pubKey != "0") {
+        if (image.pubKey != "0") {
             imageStatus = "public"
         }
-        else if (sharesMap.get(entry.id.toString())) {
+        else if (sharesMap.get(image.id.toString())) {
             imageStatus = "shared with you"
         }
 
-        var imageCell = constructTableRowNoActions(entry.description, imageStatus, tbody);
+        var imageCell = constructTableRowNoActions(image.description, imageStatus, tbody);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
-        if (entry.pubKey != "0") {
-            const pubKey = Point.fromB64(entry.pubKey)
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, pubKey.toArray()));
+        if (image.pubKey != "0") {
+            const pubKey = Point.fromB64(image.pubKey)
+            const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, pubKey.toArray()));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }
-        else if (sharesMap.get(entry.id.toString())) { // decrypt image using the correct share key
-            const encKeyPersonal = Point.fromB64(sharesMap.get(entry.id.toString()))
+        else if (sharesMap.get(image.id.toString())) { // decrypt image using the correct share key
+            const encKeyPersonal = Point.fromB64(sharesMap.get(image.id.toString()))
             const encKey = encKeyPersonal.times(Utils.mod_inv(BigInt(cvk)))
-            const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, encKey.toArray()));
+            const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, encKey.toArray()));
             const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
             ctx.putImageData(imgData, 0, 0)
         }

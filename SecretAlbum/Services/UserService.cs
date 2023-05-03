@@ -11,7 +11,7 @@ public interface IUserService
     bool VerifyMessage(string uid, string signature);
     string GetUserId(string userAlias);
     List<Album> GetAlbums();
-    List<Entry> GetUserImages(string albumId);
+    List<Image> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
     List<string> GetSharesForAlbum(string albumId);
     void RegisterAlbum(string albumId, string userAlias, string verifyKey);
@@ -69,11 +69,11 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public List<Entry> GetUserImages(string albumId)
+    public List<Image> GetUserImages(string albumId)
     {
-        return _context.Entries
+        return _context.Images
             .Where(e => e.AlbumId.Equals(albumId))
-            .Select(e => new Entry { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
+            .Select(e => new Image { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
     }
 
@@ -118,7 +118,7 @@ public class UserService : IUserService
 
     public string AddImage(string albumId, string seed, string newImageData, string description, string pubKey)
     {
-        Entry newEntry = new Entry
+        Image newImage = new Image
         {
             AlbumId = albumId,
             Description = description,
@@ -126,7 +126,7 @@ public class UserService : IUserService
             PubKey = pubKey,
             EncryptedData = newImageData
         };
-        _context.Entries.Add(newEntry);
+        _context.Images.Add(newImage);
         try
         {
             _context.SaveChanges();
@@ -140,9 +140,9 @@ public class UserService : IUserService
 
     public string DeleteImage(string imageId)
     {
-        var toDelete = _context.Entries
+        var toDelete = _context.Images
             .SingleOrDefault(e => e.Id.Equals(int.Parse(imageId)));
-        _context.Entries.Remove(toDelete);
+        _context.Images.Remove(toDelete);
 
         var sharesDelete = _context.Shares
             .Where(s => s.ImageId.Equals(imageId));
@@ -163,7 +163,7 @@ public class UserService : IUserService
         {
             return "No such album exists.";
         }
-        var existingImage = _context.Entries.SingleOrDefault(e => e.Id == int.Parse(imageId));
+        var existingImage = _context.Images.SingleOrDefault(e => e.Id == int.Parse(imageId));
         if (existingImage == null)
         {
             return "No such image exists.";

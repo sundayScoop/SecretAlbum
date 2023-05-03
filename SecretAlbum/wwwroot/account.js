@@ -41,32 +41,32 @@ async function populateTable(table, respGetImagesJson, sharesMap, uid, cvk, cons
     while (table.rows.length > 1) table.rows[1].remove();
 
     for (var i = 0; i < respGetImagesJson.length; i++) {
-        const entry = respGetImagesJson[i]
+        const image = respGetImagesJson[i]
 
         let imageStatus = "private";
-        if (entry.pubKey != "0") {
+        if (image.pubKey != "0") {
             imageStatus = "public"
         }
-        else if (sharesMap.has(entry.id.toString())) {
+        else if (sharesMap.has(image.id.toString())) {
             console.log("wow")
             imageStatus = "shared with others"
         }
 
-        var [imageCell, actionCell] = constructTableRow(entry.description, imageStatus, tbody);
+        var [imageCell, actionCell] = constructTableRow(image.description, imageStatus, tbody);
         var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
         var ctx = rowCanvas.getContext('2d');
         ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
 
-        const seed = BigInt(await decryptData(entry.seed, BigInt(cvk)));
+        const seed = BigInt(await decryptData(image.seed, BigInt(cvk)));
         const imageKey = Point.g.times(seed)
-        const pixelArray = new Uint8ClampedArray(await decryptImage(entry.encryptedData, imageKey.toArray()));
+        const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, imageKey.toArray()));
         var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
         ctx.putImageData(imgData, 0, 0)
 
         // make action buttons
-        createMakePublicButton("Make Public", entry.id, actionCell, imageKey);
-        createShareWithButton("Share With", entry.id, actionCell, seed);
-        createDeleteButton("Delete", entry.id, actionCell);
+        createMakePublicButton("Make Public", image.id, actionCell, imageKey);
+        createShareWithButton("Share With", image.id, actionCell, seed);
+        createDeleteButton("Delete", image.id, actionCell);
     }
 }
 
@@ -169,7 +169,7 @@ async function getUserPubKey(selectedUser) {
     });
     const userId = await respUserId.text()
     const respSim = await fetch(`https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/${userId}`);
-    if (!respSim.ok) throw Error("Start Key Exchange: Could not find UID's entry at simulator");
+    if (!respSim.ok) throw Error("Start Key Exchange: Could not find UID's image at simulator");
     const respSimJson = await respSim.json();
     return Point.fromB64(respSimJson.public);
 }
