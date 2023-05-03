@@ -41,6 +41,7 @@ function getNewSizeAndPlacement(width, height) {
 
 export async function upload() {
     const [uid, cvk] = verifyLogIn()
+    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
 
     // create image key and encrypt image
     const seed = RandomBigInt();
@@ -59,7 +60,8 @@ export async function upload() {
     const form = new FormData();
     form.append("seed", encSeed)
     form.append("description", description)
-    form.append("encryptedImg", encryptedImgString);
+    form.append("encryptedImg", encryptedImgString)
+    form.append("signature", sig)
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${uid}`, {
         method: 'POST',
         body: form

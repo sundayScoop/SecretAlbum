@@ -101,7 +101,6 @@ async function requestMakePublic(imageId, pubKey) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
     const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
-    console.log(sig)
 
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
@@ -147,14 +146,15 @@ async function getUserAliases() {
 async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const sig = EdDSA.Sign("Authenticated", cvk)
+    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
 
     form.append("albumId", uid)
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
+    form.append("signature", sig)
     const userPubKey = await getUserPubKey(shareTo)
     form.append("encKey", (userPubKey.times(seed)).toBase64())
-    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}&signature=${sig}`, {
+    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}`, {
         method: 'POST',
         body: form
     });

@@ -34,7 +34,10 @@ public class UserService : IUserService
         Point verifyKey;
         try
         {
-            string verifyKeyB64 = _context.Albums.Where(a => a.AlbumId == uid).Select(a => a.VerifyKey).SingleOrDefault();
+            string verifyKeyB64 = _context.Albums
+                .Where(a => a.AlbumId == uid)
+                .Select(a => a.VerifyKey)
+                .SingleOrDefault();
             verifyKey = Point.FromBase64(verifyKeyB64);
             verifyKey = new Point(verifyKey.GetX(), verifyKey.GetY());
 

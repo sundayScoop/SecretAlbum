@@ -95,10 +95,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string signature, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
         {
             try
             {
+                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
                 _userService.AddImage(albumId, seed, encryptedImg, description, "0");
                 return Ok();
             }
@@ -115,11 +116,8 @@ namespace SecretAlbum.Controllers
             try
             {
                 if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                Console.WriteLine("user verification complete.");
                 string msg = _userService.MakePublic(albumId, imageId, pubKey);
-                Console.WriteLine("make public complete.");
                 return Ok(msg);
-                // return Ok("wow");
             }
             catch
             {
@@ -129,10 +127,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult ShareTo([FromForm] string albumId, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
+        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string signature, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
         {
             try
             {
+                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
                 string msg = _userService.ShareTo(albumId, imageId, shareTo, encKey);
                 return Ok(msg);
             }
