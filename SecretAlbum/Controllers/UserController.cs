@@ -100,8 +100,24 @@ namespace SecretAlbum.Controllers
             try
             {
                 if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                _userService.AddImage(albumId, seed, encryptedImg, description, "0");
-                return Ok();
+                string msg = _userService.AddImage(albumId, seed, encryptedImg, description, "0");
+                return Ok(msg);
+            }
+            catch
+            {
+                return Ok("--FAILED--");
+            }
+
+        }
+
+        [HttpPost]
+        public IActionResult DeleteImage([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string signature)
+        {
+            try
+            {
+                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
+                string msg = _userService.DeleteImage(imageId);
+                return Ok(msg);
             }
             catch
             {

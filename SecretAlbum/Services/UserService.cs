@@ -15,7 +15,8 @@ public interface IUserService
     List<Share> GetShares(string shareTo, string albumId);
     List<string> GetSharesForAlbum(string albumId);
     void RegisterAlbum(string albumId, string userAlias, string verifyKey);
-    void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
+    string AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
+    string DeleteImage(string imageId);
     string MakePublic(string albumId, string imageId, string pubKey);
     string ShareTo(string albumId, string imageId, string shareTo, string encKey);
 }
@@ -115,7 +116,7 @@ public class UserService : IUserService
         return;
     }
 
-    public void AddImage(string albumId, string seed, string newImageData, string description, string pubKey)
+    public string AddImage(string albumId, string seed, string newImageData, string description, string pubKey)
     {
         Entry newEntry = new Entry
         {
@@ -134,6 +135,25 @@ public class UserService : IUserService
         {
             Console.WriteLine(e);
         }
+        return "Image added.";
+    }
+
+    public string DeleteImage(string imageId)
+    {
+        var toDelete = _context.Entries
+            .SingleOrDefault(e => e.Id.Equals(int.Parse(imageId)));
+        _context.Entries.Remove(toDelete);
+
+        var sharesDelete = _context.Shares
+            .Where(s => s.ImageId.Equals(imageId));
+        foreach (Share s in sharesDelete)
+        {
+            _context.Shares.Remove(s);
+        }
+
+        _context.SaveChanges();
+
+        return "deleted item.";
     }
 
     public string MakePublic(string albumId, string imageId, string pubKey)

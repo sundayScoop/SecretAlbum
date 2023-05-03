@@ -16,7 +16,7 @@ export async function showMyAlbum() {
     const respGetImagesJson = JSON.parse(respGetImagesText);
 
     // request the user's shares on the server
-    const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum??albumId=${uid}`, {
+    const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum?albumId=${uid}`, {
         method: 'GET',
     });
     if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
@@ -28,6 +28,7 @@ export async function showMyAlbum() {
         const share = [imageId, imageId]
         sharesList.push(share)
     }
+    console.log(sharesList)
     const sharesMap = new Map(sharesList);
 
     // set up the table and clear it
@@ -46,7 +47,8 @@ async function populateTable(table, respGetImagesJson, sharesMap, uid, cvk, cons
         if (entry.pubKey != "0") {
             imageStatus = "public"
         }
-        else if (sharesMap.get(entry.id.toString())) {
+        else if (sharesMap.has(entry.id.toString())) {
+            console.log("wow")
             imageStatus = "shared with others"
         }
 
@@ -148,7 +150,6 @@ async function requestShareWith(imageId, shareTo, seed) {
     const [uid, cvk] = verifyLogIn()
     const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
 
-    form.append("albumId", uid)
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
     form.append("signature", sig)
@@ -185,5 +186,18 @@ function createDeleteButton(text, imageId, actionCell) {
 }
 
 async function requestDelete(imageId) {
+    const form = new FormData();
+    const [uid, cvk] = verifyLogIn()
+    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
 
+    form.append("imageId", imageId)
+    form.append("signature", sig)
+    const resp = await fetch(window.location.origin + `/user/deleteImage?albumId=${uid}`, {
+        method: 'POST',
+        body: form
+    });
+    if (!resp.ok) alert("Something went wrong with deleting the image");
+
+    showMyAlbum()
+    window.location.replace(window.location.origin + `/main.html#account`);
 }
