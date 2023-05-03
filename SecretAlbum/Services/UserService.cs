@@ -3,18 +3,21 @@
 using SecretAlbum.Helpers;
 using SecretAlbum;
 using System.Data.SqlTypes;
+using H4x2_TinySDK.Ed25519;
+using H4x2_TinySDK.Math;
 
 public interface IUserService
 {
+    bool VerifyMessage(string uid, string signature);
     string GetUserId(string userAlias);
     List<Album> GetAlbums();
     List<Entry> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
     List<string> GetSharesForAlbum(string albumId);
-    void RegisterAlbum(string albumId, string userAlias);
+    void RegisterAlbum(string albumId, string userAlias, string verifyKey);
     void AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
-    void MakePublic(string albumId, string imageId, string pubKey);
-    void ShareTo(string albumId, string imageId, string shareTo, string encKey);
+    string MakePublic(string albumId, string imageId, string pubKey);
+    string ShareTo(string albumId, string imageId, string shareTo, string encKey);
 }
 
 public class UserService : IUserService
@@ -25,6 +28,26 @@ public class UserService : IUserService
     {
         _context = context;
     }
+
+    public bool VerifyMessage(string uid, string signature)
+    {
+        Point verifyKey;
+        try
+        {
+            string verifyKeyB64 = _context.Albums.Where(a => a.AlbumId == uid).Select(a => a.VerifyKey).SingleOrDefault();
+            verifyKey = Point.FromBase64(verifyKeyB64);
+            verifyKey = new Point(verifyKey.GetX(), verifyKey.GetY());
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+
+        return EdDSA.Verify("Authenticated", signature, verifyKey);
+    }
+
 
     public string GetUserId(string userAlias)
     {
@@ -66,12 +89,13 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public void RegisterAlbum(string albumId, string userAlias)
+    public void RegisterAlbum(string albumId, string userAlias, string verifyKey)
     {
         Album newAlbum = new Album
         {
             AlbumId = albumId,
-            UserAlias = userAlias
+            UserAlias = userAlias,
+            VerifyKey = verifyKey
         };
 
         var existingRecord = _context.Albums.SingleOrDefault(e => e.AlbumId == albumId);
@@ -84,14 +108,7 @@ public class UserService : IUserService
             existingRecord.UserAlias = userAlias;
         }
 
-        try
-        {
-            _context.SaveChanges();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        _context.SaveChanges();
         return;
     }
 
@@ -116,36 +133,44 @@ public class UserService : IUserService
         }
     }
 
-    public void MakePublic(string albumId, string imageId, string pubKey)
+    public string MakePublic(string albumId, string imageId, string pubKey)
     {
         var existingAlbum = _context.Albums.SingleOrDefault(a => a.AlbumId == albumId);
         if (existingAlbum == null)
         {
-            throw new Exception("No such album exists.");
+            return "No such album exists.";
         }
         var existingImage = _context.Entries.SingleOrDefault(e => e.Id == int.Parse(imageId));
         if (existingImage == null)
         {
-            throw new Exception("No such image exists.");
+            return "No such image exists.";
         }
         existingImage.PubKey = pubKey;
-
         try
         {
             _context.SaveChanges();
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.Write(e);
         }
+
+        return "Successfully made public.";
     }
 
-    public void ShareTo(string albumId, string imageId, string shareTo, string encKey)
+    public string ShareTo(string albumId, string imageId, string shareTo, string encKey)
     {
         string recepientId = _context.Albums
            .Where(a => a.UserAlias.Equals(shareTo))
            .Select(a => a.AlbumId)
            .ToList()[0];
+
+        // check if duplicate share exists
+        var existingShare = _context.Shares.SingleOrDefault(s => s.ImageId == imageId && s.AlbumId == albumId && s.ShareTo == recepientId);
+        if (existingShare != null)
+        {
+            return "This image is already shared to the recepient.";
+        }
 
         Share newShare = new Share
         {
@@ -155,13 +180,8 @@ public class UserService : IUserService
             EncKey = encKey
         };
         _context.Shares.Add(newShare);
-        try
-        {
-            _context.SaveChanges();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        _context.SaveChanges();
+        return "Successfully shared.";
+
     }
 }

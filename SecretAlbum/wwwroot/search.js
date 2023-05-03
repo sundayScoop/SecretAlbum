@@ -53,7 +53,6 @@ export async function getSelectedAlbum() {
         sharesList.push(share)
     }
     const sharesMap = new Map(sharesList);
-    console.log(sharesMap)
 
     // display text indicating which album the user is currently viewing
     const selectedAlbumText = document.getElementById("selectedalbumtext");
@@ -123,9 +122,12 @@ function constructTableRowNoActions(description, imageStatus, tbody) {
 export async function registerAlbum() {
     const userAlias = window.sessionStorage.getItem("userAlias");
     const [uid, cvk] = verifyLogIn()
+    var verifyKey = EdDSA.PublicKey.fromPrivate(BigInt(cvk))
+    verifyKey = new Point(verifyKey.getX(), verifyKey.getY()).toBase64()
 
     const form = new FormData();
     form.append("userAlias", userAlias)
+    form.append("verifyKey", verifyKey)
     const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${uid}`, {
         method: 'POST',
         body: form

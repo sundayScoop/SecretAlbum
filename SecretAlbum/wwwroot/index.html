@@ -19,12 +19,12 @@
     document.getElementById('signupBtn').addEventListener('click', async function () {
         var user = document.getElementById('username_su').value;
         var pass = document.getElementById('password_su').value;
-        var userAlias = document.getElementById('userAlias_si').value;
+        // var userAlias = document.getElementById('userAlias_si').value;
         var obj = await signUp.start_Heimdall(user, pass);
 
-        sessionStorage.setItem("CVK", obj.CVK);
-        sessionStorage.setItem("UID", obj.UID);
-        sessionStorage.setItem("userAlias", userAlias);
+        // sessionStorage.setItem("CVK", obj.CVK);
+        // sessionStorage.setItem("UID", obj.UID);
+        // sessionStorage.setItem("userAlias", userAlias);
 
         window.location.replace(window.location.origin);
     });
@@ -73,9 +73,9 @@
         <u onclick="switchDiv()">No Account? Sign Up!</u>
     </div>
     <div id="signup_form" style="display: none; text-align: center;">
-        <label for="userAlias">User Alias:</label>
+        <!-- <label for="userAlias">User Alias:</label>
         <input type="text" id="userAlias_si" name="userAlias">
-        <br>
+        <br> -->
         <label for="username">Username:</label>
         <input type="text" id="username_su" name="username">
         <br>

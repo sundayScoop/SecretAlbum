@@ -19,6 +19,9 @@ btnUpload.addEventListener('click', upload);
 
 const btnLogout = document.getElementById('logoutbtn');
 btnLogout.addEventListener('click', (click) => {
+    if (!confirm("Are you sure you want to log out?")) {
+        return
+    }
     window.sessionStorage.removeItem("CVK");
     window.sessionStorage.removeItem("UID");
     window.sessionStorage.removeItem("userAlias");

@@ -41,11 +41,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string userAlias)
+        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string verifyKey, [FromForm] string userAlias)
         {
             try
             {
-                _userService.RegisterAlbum(albumId, userAlias);
+                _userService.RegisterAlbum(albumId, userAlias, verifyKey);
                 return Ok();
             }
             catch
@@ -110,14 +110,16 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string pubKey)
+        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string signature, [FromForm] string imageId, [FromForm] string pubKey)
         {
             try
             {
-                _userService.MakePublic(albumId, imageId, pubKey);
-
-                // TODO: clear the share table of the entries containing specified albumId
-                return Ok();
+                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
+                Console.WriteLine("user verification complete.");
+                string msg = _userService.MakePublic(albumId, imageId, pubKey);
+                Console.WriteLine("make public complete.");
+                return Ok(msg);
+                // return Ok("wow");
             }
             catch
             {
@@ -131,11 +133,8 @@ namespace SecretAlbum.Controllers
         {
             try
             {
-                // TODO: check if imageId belongs to album with albumId.
-
-
-                _userService.ShareTo(albumId, imageId, shareTo, encKey);
-                return Ok();
+                string msg = _userService.ShareTo(albumId, imageId, shareTo, encKey);
+                return Ok(msg);
             }
             catch
             {

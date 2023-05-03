@@ -16,7 +16,7 @@ export async function showMyAlbum() {
     const respGetImagesJson = JSON.parse(respGetImagesText);
 
     // request the user's shares on the server
-    const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum?albumId=${uid}`, {
+    const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum??albumId=${uid}`, {
         method: 'GET',
     });
     if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
@@ -25,7 +25,7 @@ export async function showMyAlbum() {
     var sharesList = []
     for (var i = 0; i < respGetSharesJson.length; i++) {
         const imageId = respGetSharesJson[i]
-        const share = [imageId, null]
+        const share = [imageId, imageId]
         sharesList.push(share)
     }
     const sharesMap = new Map(sharesList);
@@ -47,7 +47,7 @@ async function populateTable(table, respGetImagesJson, sharesMap, uid, cvk, cons
             imageStatus = "public"
         }
         else if (sharesMap.get(entry.id.toString())) {
-            imageStatus = "shared with you"
+            imageStatus = "shared with others"
         }
 
         var [imageCell, actionCell] = constructTableRow(entry.description, imageStatus, tbody);
@@ -100,8 +100,12 @@ async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
+    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
+    console.log(sig)
+
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
+    form.append("signature", sig)
     const resp = await fetch(window.location.origin + `/user/makepublic?albumId=${uid}`, {
         method: 'POST',
         body: form
@@ -143,12 +147,14 @@ async function getUserAliases() {
 async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
+    const sig = EdDSA.Sign("Authenticated", cvk)
+
     form.append("albumId", uid)
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
     const userPubKey = await getUserPubKey(shareTo)
     form.append("encKey", (userPubKey.times(seed)).toBase64())
-    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}`, {
+    const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}&signature=${sig}`, {
         method: 'POST',
         body: form
     });
