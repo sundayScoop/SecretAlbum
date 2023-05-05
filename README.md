@@ -12,7 +12,7 @@ Heimdall SDK's signIn and signUp functions are used to retrieve the user's CVK a
 The app uses Elliptic Curve Cryptography (ECC) on ed25519 curve to encrypt/decrypt sensitive data. In the following sections, I use the notation * to denote elliptic curve multiplication.
 
 ### 1. Encrypting/Decrypting and Publishing Images 
-When uploading an image, a random BigInt seed value is chosen and the RGB image data is AES encrypted with `imageKey = G * seed`. The seed is then AES encrypted with CVK before being sent to the server to be stored. 
+Here, Heimdall SDK's AES functions are used to encrypt sensitive data. When uploading an image, a random BigInt seed value is chosen and the RGB image data is AES encrypted with `imageKey = G * seed`. The seed is then AES encrypted with CVK before being sent to the server to be stored. 
 
 Later, when viewing the image, the user can retrieve from the server the encrypted image data along with the encrypted seed, and perfom the following operations to decrypt the image data: 
 
