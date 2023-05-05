@@ -1,8 +1,6 @@
-import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
-import { BigIntToByteArray, RandomBigInt } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/Utils.js";
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, encryptImage, verifyLogIn, getSHA256Hash, processImage } from "/utils.js"
+import { canvasWidth, canvasHeight, encryptImage, verifyLogIn, processImage } from "/utils.js"
 
 export const imgInput = document.getElementById('imgfileinput')
 export const uploadCanvas = document.getElementById('imgfileoutput')

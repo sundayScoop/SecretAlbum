@@ -41,11 +41,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string verifyKey, [FromForm] string userAlias)
+        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string signature, [FromForm] string userAlias)
         {
             try
             {
-                _userService.RegisterAlbum(albumId, userAlias, verifyKey);
+                _userService.RegisterAlbum(albumId, userAlias, signature);
                 return Ok();
             }
             catch

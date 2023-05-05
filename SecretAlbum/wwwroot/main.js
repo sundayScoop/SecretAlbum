@@ -1,5 +1,4 @@
-import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn } from "/utils.js"
+import { verifyLogIn } from "/utils.js"
 import { showMyAlbum } from "/account.js"
 import { upload } from "/upload.js"
 import { queryAlbums, registerAlbum, getSelectedAlbum } from "/search.js"

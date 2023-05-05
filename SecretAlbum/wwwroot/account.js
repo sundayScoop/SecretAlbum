@@ -1,7 +1,6 @@
-import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 
 export async function showMyAlbum() {
     const [uid, cvk] = verifyLogIn()
@@ -15,62 +14,59 @@ export async function showMyAlbum() {
     }
     const respGetImagesJson = JSON.parse(respGetImagesText);
 
-    // request the user's shares on the server
+    // request the user's shares from the server
     const respGetShares = await fetch(window.location.origin + `/user/getSharesForAlbum?albumId=${uid}`, {
         method: 'GET',
     });
     if (!respGetShares.ok) alert("Something went wrong when requesting for shares.");
-    const respGetSharesText = await respGetShares.text();
-    var respGetSharesJson = JSON.parse(respGetSharesText);
+    var respGetSharesJson = JSON.parse(await respGetShares.text());
     var sharesList = []
     for (var i = 0; i < respGetSharesJson.length; i++) {
         const imageId = respGetSharesJson[i]
         const share = [imageId, imageId]
         sharesList.push(share)
     }
-    console.log(sharesList)
     const sharesMap = new Map(sharesList);
 
-    // set up the table and clear it
+    // set up the table, clear it, and populate it.
     var table = document.getElementById("myalbumtbl");
-    populateTable(table, respGetImagesJson, sharesMap, uid, cvk, constructTableRow)
-}
-
-async function populateTable(table, respGetImagesJson, sharesMap, uid, cvk, constructTableRow) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
-
     for (var i = 0; i < respGetImagesJson.length; i++) {
-        const image = respGetImagesJson[i]
-
-        let imageStatus = "private";
-        if (image.pubKey != "0") {
-            imageStatus = "public"
-        }
-        else if (sharesMap.has(image.id.toString())) {
-            console.log("wow")
-            imageStatus = "shared with others"
-        }
-
-        var [imageCell, actionCell] = constructTableRow(image.description, imageStatus, tbody);
-        var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
-        var ctx = rowCanvas.getContext('2d');
-        ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
-
-        const seed = BigInt(await decryptData(image.seed, BigInt(cvk)));
-        const imageKey = Point.g.times(seed)
-        const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, imageKey.toArray()));
-        var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
-        ctx.putImageData(imgData, 0, 0)
-
-        // make action buttons
-        createMakePublicButton("Make Public", image.id, actionCell, imageKey);
-        createShareWithButton("Share With", image.id, actionCell, seed);
-        createDeleteButton("Delete", image.id, actionCell);
+        prepareRow(tbody, i, respGetImagesJson[i], sharesMap, cvk)
     }
 }
 
-function constructTableRow(description, imageStatus, tbody) {
+async function prepareRow(tbody, i, image, sharesMap, cvk) {
+    let imageStatus = "private";
+    if (image.pubKey != "0") {
+        imageStatus = "public"
+    }
+    else if (sharesMap.has(image.id.toString())) {
+        imageStatus = "shared with others"
+    }
+
+    var [imageCell, actionCell] = prepareCells(image.description, imageStatus, tbody);
+
+    // prepare canvas to draw the image on
+    var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
+    var ctx = rowCanvas.getContext('2d');
+    ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
+
+    // decrypt the image and draw it
+    const seed = BigInt(await AES.decryptData(image.seed, BigInt(cvk)));
+    const imageKey = Point.g.times(seed)
+    const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, imageKey.toArray()));
+    var imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+    ctx.putImageData(imgData, 0, 0)
+
+    // make action buttons
+    createMakePublicButton("Make Public", image.id, actionCell, imageKey);
+    createShareWithButton("Share With", image.id, actionCell, seed);
+    createDeleteButton("Delete", image.id, actionCell);
+}
+
+function prepareCells(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
@@ -112,6 +108,9 @@ async function requestMakePublic(imageId, pubKey) {
         body: form
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
+
+    showMyAlbum()
+    window.location.replace(window.location.origin + `/main.html#account`);
 }
 
 function createShareWithButton(text, imageId, actionCell, seed) {
@@ -161,6 +160,8 @@ async function requestShareWith(imageId, shareTo, seed) {
     });
     if (!resp.ok) alert("Something went wrong with uploading the image");
 
+    showMyAlbum()
+    window.location.replace(window.location.origin + `/main.html#account`);
 }
 
 async function getUserPubKey(selectedUser) {

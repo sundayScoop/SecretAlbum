@@ -1,6 +1,6 @@
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getSHA256Hash, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
-import { signIn, signUp, AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
+import { AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
 export async function queryAlbums() {
     registerAlbum()
@@ -59,50 +59,51 @@ export async function getSelectedAlbum() {
     const aliasChosen = dropdown.options[dropdown.selectedIndex].text
     selectedAlbumText.textContent = "Viewing " + aliasChosen + "'s album"
 
+    // set up the table, clear it, and populate it.
     var table = document.getElementById("viewtbl");
-    populateTable(table, respGetAlbumJson, sharesMap, uid, cvk, constructTableRowNoActions)
-}
-
-export async function populateTable(table, respGetAlbumJson, sharesMap, uid, cvk, constructTableRowNoActions) {
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
-
     for (var i = 0; i < respGetAlbumJson.length; i++) {
-        const image = respGetAlbumJson[i]
-
-        let imageStatus = "private";
-        if (image.pubKey != "0") {
-            imageStatus = "public"
-        }
-        else if (sharesMap.get(image.id.toString())) {
-            imageStatus = "shared with you"
-        }
-
-        var imageCell = constructTableRowNoActions(image.description, imageStatus, tbody);
-        var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
-        var ctx = rowCanvas.getContext('2d');
-        ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
-
-        if (image.pubKey != "0") {
-            const pubKey = Point.fromB64(image.pubKey)
-            const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, pubKey.toArray()));
-            const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
-            ctx.putImageData(imgData, 0, 0)
-        }
-        else if (sharesMap.get(image.id.toString())) { // decrypt image using the correct share key
-            const encKeyPersonal = Point.fromB64(sharesMap.get(image.id.toString()))
-            const encKey = encKeyPersonal.times(Utils.mod_inv(BigInt(cvk)))
-            const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, encKey.toArray()));
-            const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
-            ctx.putImageData(imgData, 0, 0)
-        }
-        else {
-            ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
-        }
+        prepareRow(tbody, i, respGetAlbumJson[i], sharesMap, cvk)
     }
 }
 
-function constructTableRowNoActions(description, imageStatus, tbody) {
+export async function prepareRow(tbody, i, image, sharesMap, cvk) {
+    let imageStatus = "private";
+    if (image.pubKey != "0") {
+        imageStatus = "public"
+    }
+    else if (sharesMap.get(image.id.toString())) {
+        imageStatus = "shared with you"
+    }
+
+    var imageCell = prepareCellsNoActions(image.description, imageStatus, tbody);
+
+    // prepare canvas to draw the image on
+    var rowCanvas = prepareAlbumCanvas(imageCell, i, canvasWidth, canvasHeight)
+    var ctx = rowCanvas.getContext('2d');
+    ctx.clearRect(0, 0, rowCanvas.width, rowCanvas.height);
+
+    // try to decrypt the image and then draw it
+    if (image.pubKey != "0") {
+        const pubKey = Point.fromB64(image.pubKey)
+        const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, pubKey.toArray()));
+        const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+        ctx.putImageData(imgData, 0, 0)
+    }
+    else if (sharesMap.get(image.id.toString())) { // decrypt image using the correct share key
+        const encKeyPersonal = Point.fromB64(sharesMap.get(image.id.toString()))
+        const encKey = encKeyPersonal.times(Utils.mod_inv(BigInt(cvk)))
+        const pixelArray = new Uint8ClampedArray(await decryptImage(image.encryptedData, encKey.toArray()));
+        const imgData = new ImageData(pixelArray, rowCanvas.width, rowCanvas.height)
+        ctx.putImageData(imgData, 0, 0)
+    }
+    else {
+        ctx.drawImage(encryptedDefaultImage, 0, 0, canvasWidth, canvasHeight)
+    }
+}
+
+function prepareCellsNoActions(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
@@ -122,12 +123,11 @@ function constructTableRowNoActions(description, imageStatus, tbody) {
 export async function registerAlbum() {
     const userAlias = window.sessionStorage.getItem("userAlias");
     const [uid, cvk] = verifyLogIn()
-    var verifyKey = EdDSA.PublicKey.fromPrivate(BigInt(cvk))
-    verifyKey = new Point(verifyKey.getX(), verifyKey.getY()).toBase64()
+    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
 
     const form = new FormData();
     form.append("userAlias", userAlias)
-    form.append("verifyKey", verifyKey)
+    form.append("signature", sig)
     const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${uid}`, {
         method: 'POST',
         body: form

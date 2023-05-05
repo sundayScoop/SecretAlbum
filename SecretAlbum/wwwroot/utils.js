@@ -1,4 +1,4 @@
-import { encryptData, decryptData } from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Tools/AES.js";
+import { AES } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
 export const canvasWidth = 300;
 export const canvasHeight = 300;
@@ -59,22 +59,11 @@ function stringToPixelArr(s) {
 export async function encryptImage(imgData, keyBytes) {
     var pixelArray = imgData.data;
     var imgString = pixelArrToString(pixelArray);
-    return await encryptData(imgString, keyBytes);
+    return await AES.encryptData(imgString, keyBytes);
 }
 
 export async function decryptImage(encryptedImg, keyBytes) {
-    var imgString = await decryptData(encryptedImg, keyBytes)
+    var imgString = await AES.decryptData(encryptedImg, keyBytes)
     var pixelArray = stringToPixelArr(imgString)
     return pixelArray;
 }
-
-// use this hash function temporarily until Heimdall gets fixed
-export async function getSHA256Hash(input) {
-    const textAsBuffer = new TextEncoder().encode(input);
-    const hashBuffer = await window.crypto.subtle.digest("SHA-256", textAsBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hash = hashArray
-        .map((item) => item.toString(16).padStart(2, "0"))
-        .join("");
-    return hash;
-};

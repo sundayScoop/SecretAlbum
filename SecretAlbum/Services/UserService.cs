@@ -5,6 +5,7 @@ using SecretAlbum;
 using System.Data.SqlTypes;
 using H4x2_TinySDK.Ed25519;
 using H4x2_TinySDK.Math;
+using Newtonsoft.Json;
 
 public interface IUserService
 {
@@ -14,7 +15,7 @@ public interface IUserService
     List<Image> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
     List<string> GetSharesForAlbum(string albumId);
-    void RegisterAlbum(string albumId, string userAlias, string verifyKey);
+    Task RegisterAlbum(string albumId, string userAlias, string signature);
     string AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     string DeleteImage(string imageId);
     string MakePublic(string albumId, string imageId, string pubKey);
@@ -32,23 +33,11 @@ public class UserService : IUserService
 
     public bool VerifyMessage(string uid, string signature)
     {
-        Point verifyKey;
-        try
-        {
-            string verifyKeyB64 = _context.Albums
-                .Where(a => a.AlbumId == uid)
-                .Select(a => a.VerifyKey)
-                .SingleOrDefault();
-            verifyKey = Point.FromBase64(verifyKeyB64);
-            verifyKey = new Point(verifyKey.GetX(), verifyKey.GetY());
-
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return false;
-        }
-
+        var verifyKeyB64 = _context.Albums
+            .Where(a => a.AlbumId == uid)
+            .Select(a => a.VerifyKey)
+            .SingleOrDefault();
+        Point verifyKey = Point.FromBase64(verifyKeyB64);
         return EdDSA.Verify("Authenticated", signature, verifyKey);
     }
 
@@ -93,13 +82,26 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public void RegisterAlbum(string albumId, string userAlias, string verifyKey)
+    public async Task RegisterAlbum(string albumId, string userAlias, string signature)
     {
+        // request the user's public key from simulator
+        var client = new HttpClient();
+        string url = "https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/" + albumId;
+        var preResponse = await client.GetAsync(url);
+        var response = await preResponse.Content.ReadAsStringAsync();
+        var keyEntry = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+        string pubKey = keyEntry["public"];
+
+        // verify the signature
+        Point verifyKeyPoint = Point.FromBase64(pubKey);
+        if (!EdDSA.Verify("Authenticated", signature, verifyKeyPoint)) return;
+
+        // create and/or update the album on record
         Album newAlbum = new Album
         {
             AlbumId = albumId,
             UserAlias = userAlias,
-            VerifyKey = verifyKey
+            VerifyKey = pubKey
         };
 
         var existingRecord = _context.Albums.SingleOrDefault(e => e.AlbumId == albumId);
@@ -111,7 +113,6 @@ public class UserService : IUserService
         {
             existingRecord.UserAlias = userAlias;
         }
-
         _context.SaveChanges();
         return;
     }
