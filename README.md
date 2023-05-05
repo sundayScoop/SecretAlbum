@@ -12,7 +12,7 @@ Heimdall SDK's signIn and signUp functions are used to retrieve the user's CVK a
 The app uses Elliptic Curve Cryptography (ECC) on ed25519 curve to encrypt/decrypt sensitive data. In the following sections, I use the notation * to denote elliptic curve multiplication.
 
 ### 1. Encrypting/Decrypting and Publishing Images 
-Here, Heimdall SDK's AES functions are used to encrypt sensitive data. When uploading an image, a random BigInt seed value is chosen and the RGB image data is AES encrypted with `imageKey = G * seed`. The seed is then AES encrypted with CVK before being sent to the server to be stored. 
+Here, Heimdall SDK's AES functions are used to encrypt sensitive data that would be stored in the server, which ensures that the server cannot make any sense of the data that is being stored. When uploading an image, a random BigInt seed value is chosen and the RGB image data is AES encrypted with `imageKey = G * seed`. The seed is then AES encrypted with CVK before being sent to the server to be stored. 
 
 Later, when viewing the image, the user can retrieve from the server the encrypted image data along with the encrypted seed, and perfom the following operations to decrypt the image data: 
 
@@ -21,12 +21,14 @@ imageKey = G * AESdecrypt(encryptedSeed, CVK) = G * seed
 decryptedImage = AESdecrypt(encryptedImage, imageKey)
 ```
 
+Evidently, only the user with the correct CVK can decrypt the seed, then decrypt the image data using the decrypted seed.
+
 A user can also choose to make his/her image public. In this case, the image key is sent to the server to be stored in the database, and anyone can retrieve this key to decrypt the corresponding image.
 
 ### 2. Sharing Images
-When user A shares an image with user B, user A retrieves the public key of user B from Tide's blockchain simulator website (https://new-simulator.australiaeast.cloudapp.azure.com), where `pubKey_B = G * CVK_B`. User A combines this public key with the seed to create `shareKey = G * CVK_B * seed`. This share key is sent to the server to be stored in the database. 
+Here, I describe a cryptographic scheme that I made myself, because I believe Heimdall SDK does not provide a method for this specific use case (I am aware of the consequences in marks). When user A shares an image with user B, user A retrieves the public key of user B from Tide's blockchain simulator website (https://new-simulator.australiaeast.cloudapp.azure.com), where `pubKey_B = G * CVK_B`. User A combines this public key with the seed to create `shareKey = G * CVK_B * seed`. This share key is sent to the server to be stored in the database. 
 
-Later, when user B retrieves the said image from user A's album, user B also retrieves the corresponding share key. User B can then extract the correct image key using the following operation: `imageKey = shareKey * modInverse(CVK_B) = G * seed * CVK_B * modInverse(CVK_B) = G * seed`. This scheme allows a user to encrypt image keys and share it in a way that only the specified receivers can decrypt it with their own CVKs while giving the server no clue about the decrypted value.
+Later, when user B retrieves the said image from user A's album, user B also retrieves the corresponding share key. User B can then extract the correct image key using the following operation: `imageKey = shareKey * modInverse(CVK_B) = G * seed * CVK_B * modInverse(CVK_B) = G * seed`. This scheme allows a user to encrypt image keys and share it in a way that only the specified receivers can decrypt it with their own CVKs while giving the middlemen no clue about the decrypted value.
 
 ### 3. Authenticating Requests
 An http request to the server is assumed to be coming from the user with the UID specified in the request, which means that an imposter can pretend to be another user by changing the UID value before sending it. This poses no security issue for actions such as viewing images, since an imposter cannot decrypt the images in the event that he/she successfully retrieves them. However, the vulnerability does allow an imposter to perform other dangerous actions such as deleting, publishing, or sharing another user's images. Hence the app authenticates these requests to the server using Heimdall SDK's EdDSA functions. When a user logs in, his/her public key is sent to the server to be stored in the database. For each sensitive request, the user signs a message using his/her CVK (also known as private key) and includes this signature in the request form. When the server receives the request, it verifies the signature using the corresponding public key from the database, ensuring that the request came from the indicated user.
