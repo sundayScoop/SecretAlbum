@@ -7,7 +7,9 @@ SecretAlbum is a proof-of-concept image-sharing social media app that aims to gi
 SecretAlbum is forked from https://github.com/sundayScoop/PlatyPasswords
 
 ## Implementation
-Heimdall SDK's signIn and signUp functions are used to retrieve the user's CVK and UID (hash of username), which are then stored in the browser session for later. The user is always given the option to 'log out' which would clear the session of the CVK and UID.
+Heimdall SDK's signIn and signUp functions are used to retrieve the user's CVK and UID (hash of username), which are then stored in the browser session for later. The user is always given the option to 'log out' which would clear the session of the CVK and UID. 
+
+The app uses Elliptic Curve Cryptography (ECC) on ed25519 curve to encrypt/decrypt sensitive data. In the following sections, I use the notation * to denote elliptic curve multiplication.
 
 ### 1. Encrypting/Decrypting and Publishing Images 
 When uploading an image, a random BigInt seed value is chosen and the RGB image data is AES encrypted with `imageKey = G * seed`. The seed is then AES encrypted with CVK before being sent to the server to be stored. 
