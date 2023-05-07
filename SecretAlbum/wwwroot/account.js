@@ -1,6 +1,6 @@
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, getTime, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
 
 export async function showMyAlbum() {
     const [uid, cvk] = verifyLogIn()
@@ -98,7 +98,8 @@ async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
+    const timeMsg = await getTime()
+    const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
@@ -147,7 +148,8 @@ async function getUserAliases() {
 async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
+    const timeMsg = await getTime()
+    const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
@@ -189,7 +191,8 @@ function createDeleteButton(text, imageId, actionCell) {
 async function requestDelete(imageId) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
+    const timeMsg = await getTime()
+    const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
     form.append("signature", sig)

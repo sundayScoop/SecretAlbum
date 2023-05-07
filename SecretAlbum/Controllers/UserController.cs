@@ -15,6 +15,12 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetTime()
+        {
+            return Ok(_userService.GetTimeString(DateTime.Now));
+        }
+
+        [HttpGet]
         public IActionResult GetUserId([FromQuery] string userAlias)
         {
             try

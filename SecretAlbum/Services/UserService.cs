@@ -20,6 +20,7 @@ public interface IUserService
     string DeleteImage(string imageId);
     string MakePublic(string albumId, string imageId, string pubKey);
     string ShareTo(string albumId, string imageId, string shareTo, string encKey);
+    string GetTimeString(DateTime dt);
 }
 
 public class UserService : IUserService
@@ -33,12 +34,23 @@ public class UserService : IUserService
 
     public bool VerifyMessage(string uid, string signature)
     {
+        string now = GetTimeString(DateTime.Now);
+        string pre = GetTimeString(DateTime.Now.AddSeconds(-4));
+
         var verifyKeyB64 = _context.Albums
             .Where(a => a.AlbumId == uid)
             .Select(a => a.VerifyKey)
             .SingleOrDefault();
         Point verifyKey = Point.FromBase64(verifyKeyB64);
-        return EdDSA.Verify("Authenticated", signature, verifyKey);
+
+        return (EdDSA.Verify(now, signature, verifyKey) || EdDSA.Verify(pre, signature, verifyKey));
+    }
+
+    public string GetTimeString(DateTime dt)
+    {
+        double ymdhms = double.Parse(dt.ToString("yyyyMMddHHmmss"));
+        double timeRounded = Math.Round(ymdhms / 4.0) * 4;
+        return timeRounded.ToString();
     }
 
 

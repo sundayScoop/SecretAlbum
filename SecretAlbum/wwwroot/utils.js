@@ -15,6 +15,11 @@ export function verifyLogIn() {
     return [uid, cvk]
 }
 
+export async function getTime() {
+    const respTime = await fetch(window.location.origin + `/user/getTime`);
+    return await respTime.text()
+}
+
 export function processImage(imgFile) {
     const imgUrl = `${URL.createObjectURL(imgFile)}`
     const imgInstance = new Image(150, 150);
