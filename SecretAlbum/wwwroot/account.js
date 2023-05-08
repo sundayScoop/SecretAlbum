@@ -29,7 +29,6 @@ export async function showMyAlbum() {
     const sharesMap = new Map(sharesList);
 
     // set up the table, clear it, and populate it.
-    //Use table-layout:fixed in the table and word-wrap:break-word in the td
     var table = document.getElementById("myalbumtbl");
     table.style = "border-collapse:collapse; table-layout:fixed; word-wrap:break-word;"
     var tbody = table.getElementsByTagName("tbody")[0];
@@ -97,6 +96,9 @@ function createMakePublicButton(text, imageId, actionCell, imageKey) {
 }
 
 async function requestMakePublic(imageId, pubKey) {
+    if (!confirm("Are you sure you want to make this image public? This action cannot be reversed.")) {
+        return
+    }
     // request my images from server
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
@@ -176,10 +178,6 @@ async function requestShareWith(imageId, shareTo, seed) {
 }
 
 async function getUserPubKey(selectedUser) {
-    // const respUserId = await fetch(window.location.origin + `/user/getUserId?userAlias=${selectedUser}`, {
-    //     method: 'GET'
-    // });
-    // const userId = await respUserId.text()
     const respSim = await fetch(`https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/${selectedUser}`);
     if (!respSim.ok) throw Error("Start Key Exchange: Could not find UID's image at simulator");
     const respSimJson = await respSim.json();
@@ -198,6 +196,9 @@ function createDeleteButton(text, imageId, actionCell) {
 }
 
 async function requestDelete(imageId) {
+    if (!confirm("Are you sure you want to delete this image?")) {
+        return
+    }
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
     const timeMsg = btoa(await getTime())

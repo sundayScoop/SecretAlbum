@@ -145,7 +145,7 @@ public class UserService : IUserService
         {
             Console.WriteLine(e);
         }
-        return "Image added.";
+        return "Successfully added image.";
     }
 
     public string DeleteImage(string imageId)
@@ -163,7 +163,7 @@ public class UserService : IUserService
 
         _context.SaveChanges();
 
-        return "deleted item.";
+        return "Successfully deleted item.";
     }
 
     public string MakePublic(string albumId, string imageId, string pubKey)
@@ -210,6 +210,5 @@ public class UserService : IUserService
         _context.Shares.Add(newShare);
         _context.SaveChanges();
         return "Successfully shared.";
-
     }
 }
