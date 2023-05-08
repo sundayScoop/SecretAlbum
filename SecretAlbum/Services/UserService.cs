@@ -6,21 +6,23 @@ using System.Data.SqlTypes;
 using H4x2_TinySDK.Ed25519;
 using H4x2_TinySDK.Math;
 using Newtonsoft.Json;
+using System.Text;
 
 public interface IUserService
 {
-    bool VerifyMessage(string uid, string signature);
+    Point GetVerifyKey(string uid);
+    bool VerifyMessage(string uid, string message, string signature, Point verifyKey);
     string GetUserId(string userAlias);
     List<Album> GetAlbums();
     List<Image> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
     List<string> GetSharesForAlbum(string albumId);
-    Task RegisterAlbum(string albumId, string userAlias, string signature);
+    Task<string> GetPubKey(string albumId);
+    string RegisterAlbum(string albumId, string userAlias, string pubKey);
     string AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     string DeleteImage(string imageId);
     string MakePublic(string albumId, string imageId, string pubKey);
     string ShareTo(string albumId, string imageId, string shareTo, string encKey);
-    string GetTimeString(DateTime dt);
 }
 
 public class UserService : IUserService
@@ -32,27 +34,33 @@ public class UserService : IUserService
         _context = context;
     }
 
-    public bool VerifyMessage(string uid, string signature)
+    public Point GetVerifyKey(string uid)
     {
-        string now = GetTimeString(DateTime.Now);
-        string pre = GetTimeString(DateTime.Now.AddSeconds(-4));
-
         var verifyKeyB64 = _context.Albums
             .Where(a => a.AlbumId == uid)
             .Select(a => a.VerifyKey)
             .SingleOrDefault();
-        Point verifyKey = Point.FromBase64(verifyKeyB64);
-
-        return (EdDSA.Verify(now, signature, verifyKey) || EdDSA.Verify(pre, signature, verifyKey));
+        return Point.FromBase64(verifyKeyB64);
     }
 
-    public string GetTimeString(DateTime dt)
+    public bool VerifyMessage(string uid, string message, string signature, Point verifyKey)
     {
-        double ymdhms = double.Parse(dt.ToString("yyyyMMddHHmmss"));
-        double timeRounded = Math.Round(ymdhms / 4.0) * 4;
-        return timeRounded.ToString();
-    }
+        // reject if signature is not verified.
+        if (!EdDSA.Verify(message, signature, verifyKey))
+        {
+            return false;
+        }
 
+        // reject if token is expired
+        string timeMsg = Encoding.UTF8.GetString(Convert.FromBase64String(message));
+        DateTime iat = DateTime.Parse(timeMsg);
+        if (DateTime.Now > iat.AddSeconds(6))
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public string GetUserId(string userAlias)
     {
@@ -94,7 +102,7 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public async Task RegisterAlbum(string albumId, string userAlias, string signature)
+    public async Task<string> GetPubKey(string albumId)
     {
         // request the user's public key from simulator
         var client = new HttpClient();
@@ -102,12 +110,11 @@ public class UserService : IUserService
         var preResponse = await client.GetAsync(url);
         var response = await preResponse.Content.ReadAsStringAsync();
         var keyEntry = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
-        string pubKey = keyEntry["public"];
+        return keyEntry["public"];
+    }
 
-        // verify the signature
-        Point verifyKeyPoint = Point.FromBase64(pubKey);
-        if (!EdDSA.Verify("Authenticated", signature, verifyKeyPoint)) return;
-
+    public string RegisterAlbum(string albumId, string userAlias, string pubKey)
+    {
         // create and/or update the album on record
         Album newAlbum = new Album
         {
@@ -126,7 +133,7 @@ public class UserService : IUserService
             existingRecord.UserAlias = userAlias;
         }
         _context.SaveChanges();
-        return;
+        return "successfully registered album.";
     }
 
     public string AddImage(string albumId, string seed, string newImageData, string description, string pubKey)

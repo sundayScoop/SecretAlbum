@@ -1,7 +1,7 @@
-import { verifyLogIn } from "/utils.js"
+import { verifyLogIn, registerAlbum, } from "/utils.js"
 import { showMyAlbum } from "/account.js"
 import { upload } from "/upload.js"
-import { queryAlbums, registerAlbum, getSelectedAlbum } from "/search.js"
+import { queryAlbums, getSelectedAlbum } from "/search.js"
 
 intialize()
 

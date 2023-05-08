@@ -1,4 +1,4 @@
-import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, prepareAlbumCanvas, encryptedDefaultImage } from "/utils.js"
+import { canvasWidth, canvasHeight, decryptImage, verifyLogIn, prepareAlbumCanvas, encryptedDefaultImage, registerAlbum } from "/utils.js"
 import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
 import { AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
@@ -118,21 +118,6 @@ function prepareCellsNoActions(description, imageStatus, tbody) {
     tbody.appendChild(row);
 
     return imageCell
-}
-
-export async function registerAlbum() {
-    const userAlias = window.sessionStorage.getItem("userAlias");
-    const [uid, cvk] = verifyLogIn()
-    const sig = await EdDSA.sign("Authenticated", BigInt(cvk))
-
-    const form = new FormData();
-    form.append("userAlias", userAlias)
-    form.append("signature", sig)
-    const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${uid}`, {
-        method: 'POST',
-        body: form
-    });
-    if (!resp.ok) alert("Something went wrong with uploading the image");
 }
 
 function refreshDropdownOptions(respJsonList) {

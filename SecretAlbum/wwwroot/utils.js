@@ -1,4 +1,4 @@
-import { AES } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
+import { AES, Utils, EdDSA, Hash, KeyExchange } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 
 export const canvasWidth = 300;
 export const canvasHeight = 300;
@@ -18,6 +18,23 @@ export function verifyLogIn() {
 export async function getTime() {
     const respTime = await fetch(window.location.origin + `/user/getTime`);
     return await respTime.text()
+}
+
+export async function registerAlbum() {
+    const userAlias = window.sessionStorage.getItem("userAlias");
+    const [uid, cvk] = verifyLogIn()
+    const timeMsg = btoa(await getTime())
+    const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
+
+    const form = new FormData();
+    form.append("userAlias", userAlias)
+    form.append("jwt", timeMsg + "." + sig)
+    const resp = await fetch(window.location.origin + `/user/registeralbum?albumId=${uid}`, {
+        method: 'POST',
+        body: form
+    });
+    if (!resp.ok) alert("Something went wrong with uploading the image");
+    return
 }
 
 export function processImage(imgFile) {

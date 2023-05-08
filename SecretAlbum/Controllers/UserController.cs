@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SecretAlbum.Services;
+using H4x2_TinySDK.Ed25519;
+using H4x2_TinySDK.Math;
 
 namespace SecretAlbum.Controllers
 {
@@ -17,7 +19,7 @@ namespace SecretAlbum.Controllers
         [HttpGet]
         public IActionResult GetTime()
         {
-            return Ok(_userService.GetTimeString(DateTime.Now));
+            return Ok(DateTime.Now.ToString());
         }
 
         [HttpGet]
@@ -47,18 +49,29 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult RegisterAlbum([FromQuery] string albumId, [FromForm] string signature, [FromForm] string userAlias)
+        public async Task<IActionResult> RegisterAlbum([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string userAlias)
         {
+            if (!userAlias.All(char.IsLetterOrDigit))
+            {
+                return Ok("Failed: Only alphanumeric characters are allowed in the user alias.");
+            }
             try
             {
-                _userService.RegisterAlbum(albumId, userAlias, signature);
-                return Ok();
+                string pubKey = await _userService.GetPubKey(albumId);
+                string[] contents = jwt.Split('.');
+                string message = contents[0];
+                string signature = contents[1];
+                if (!_userService.VerifyMessage(albumId, message, signature, Point.FromBase64(pubKey)))
+                {
+                    return Ok("Failed: Token expired or wrong verification key.");
+                }
+                string response = _userService.RegisterAlbum(albumId, userAlias, pubKey);   // save pubkey in database
+                return Ok(response);
             }
             catch
             {
                 return Ok("--FAILED--");
             }
-
         }
 
         [HttpGet]
@@ -101,13 +114,24 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string signature, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
+        public IActionResult AddImage([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string seed, [FromForm] string encryptedImg, [FromForm] string description, [FromForm] string pubKey)
         {
+            if (description.Length > 300)
+            {
+                return Ok("Failed: description exceeded the limit of 300 characters.");
+            }
             try
             {
-                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                string msg = _userService.AddImage(albumId, seed, encryptedImg, description, "0");
-                return Ok(msg);
+                string[] contents = jwt.Split('.');
+                string message = contents[0];
+                string signature = contents[1];
+                Point verifyKey = _userService.GetVerifyKey(albumId);
+                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+                {
+                    return Ok("Failed: Token expired or wrong verification key.");
+                }
+                string response = _userService.AddImage(albumId, seed, encryptedImg, description, "0");
+                return Ok(response);
             }
             catch
             {
@@ -117,13 +141,20 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult DeleteImage([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string signature)
+        public IActionResult DeleteImage([FromQuery] string albumId, [FromForm] string imageId, [FromForm] string jwt)
         {
             try
             {
-                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                string msg = _userService.DeleteImage(imageId);
-                return Ok(msg);
+                string[] contents = jwt.Split('.');
+                string message = contents[0];
+                string signature = contents[1];
+                Point verifyKey = _userService.GetVerifyKey(albumId);
+                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+                {
+                    return Ok("Failed: Token expired or wrong verification key.");
+                }
+                string response = _userService.DeleteImage(imageId);
+                return Ok(response);
             }
             catch
             {
@@ -133,13 +164,20 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string signature, [FromForm] string imageId, [FromForm] string pubKey)
+        public IActionResult MakePublic([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string imageId, [FromForm] string pubKey)
         {
             try
             {
-                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                string msg = _userService.MakePublic(albumId, imageId, pubKey);
-                return Ok(msg);
+                string[] contents = jwt.Split('.');
+                string message = contents[0];
+                string signature = contents[1];
+                Point verifyKey = _userService.GetVerifyKey(albumId);
+                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+                {
+                    return Ok("Failed: Token expired or wrong verification key.");
+                }
+                string response = _userService.MakePublic(albumId, imageId, pubKey);
+                return Ok(response);
             }
             catch
             {
@@ -149,13 +187,20 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string signature, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
+        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
         {
             try
             {
-                if (!_userService.VerifyMessage(albumId, signature)) return Ok("Not authorized.");
-                string msg = _userService.ShareTo(albumId, imageId, shareTo, encKey);
-                return Ok(msg);
+                string[] contents = jwt.Split('.');
+                string message = contents[0];
+                string signature = contents[1];
+                Point verifyKey = _userService.GetVerifyKey(albumId);
+                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+                {
+                    return Ok("Failed: Token expired or wrong verification key.");
+                }
+                string response = _userService.ShareTo(albumId, imageId, shareTo, encKey);
+                return Ok(response);
             }
             catch
             {

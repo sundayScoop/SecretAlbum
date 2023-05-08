@@ -71,7 +71,7 @@ function prepareCells(description, imageStatus, tbody) {
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
     descriptionCell.style = "vertical-align: top; white-space: pre;"
-    descriptionCell.textContent = "Status: " + imageStatus + "\r\n\r\n" + description;
+    descriptionCell.textContent = "STATUS: " + imageStatus + "\r\n\r\n" + "DESCRIPTION: " + description;
     const actionCell = document.createElement("td");
     actionCell.style = "vertical-align: top;"
 
@@ -98,12 +98,12 @@ async function requestMakePublic(imageId, pubKey) {
     // request my images from server
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const timeMsg = await getTime()
+    const timeMsg = btoa(await getTime())
     const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
     form.append("pubKey", pubKey)
-    form.append("signature", sig)
+    form.append("jwt", timeMsg + "." + sig)
     const resp = await fetch(window.location.origin + `/user/makepublic?albumId=${uid}`, {
         method: 'POST',
         body: form
@@ -148,12 +148,12 @@ async function getUserAliases() {
 async function requestShareWith(imageId, shareTo, seed) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const timeMsg = await getTime()
+    const timeMsg = btoa(await getTime())
     const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
     form.append("shareTo", shareTo)
-    form.append("signature", sig)
+    form.append("jwt", timeMsg + "." + sig)
     const userPubKey = await getUserPubKey(shareTo)
     form.append("encKey", (userPubKey.times(seed)).toBase64())
     const resp = await fetch(window.location.origin + `/user/shareto?albumId=${uid}`, {
@@ -191,11 +191,11 @@ function createDeleteButton(text, imageId, actionCell) {
 async function requestDelete(imageId) {
     const form = new FormData();
     const [uid, cvk] = verifyLogIn()
-    const timeMsg = await getTime()
+    const timeMsg = btoa(await getTime())
     const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
 
     form.append("imageId", imageId)
-    form.append("signature", sig)
+    form.append("jwt", timeMsg + "." + sig)
     const resp = await fetch(window.location.origin + `/user/deleteImage?albumId=${uid}`, {
         method: 'POST',
         body: form
