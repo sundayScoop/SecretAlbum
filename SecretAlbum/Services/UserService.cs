@@ -53,7 +53,7 @@ public class UserService : IUserService
         // reject if token is expired
         string timeMsg = Encoding.UTF8.GetString(Convert.FromBase64String(message));
         DateTime iat = DateTime.Parse(timeMsg);
-        if (DateTime.Now > iat.AddSeconds(6))
+        if (DateTime.Now > iat.AddSeconds(10))
         {
             return false;
         }

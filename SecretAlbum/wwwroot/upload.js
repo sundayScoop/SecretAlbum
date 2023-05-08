@@ -65,5 +65,10 @@ export async function upload() {
         method: 'POST',
         body: form
     });
-    if (!resp.ok) alert("Something went wrong with uploading the image");
+    if (!resp.ok) {
+        alert("Something went wrong with uploading the image.")
+    }
+    else {
+        alert("Request complete.")
+    }
 }
