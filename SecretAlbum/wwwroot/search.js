@@ -61,6 +61,7 @@ export async function getSelectedAlbum() {
 
     // set up the table, clear it, and populate it.
     var table = document.getElementById("viewtbl");
+    table.style = "border-collapse:collapse; table-layout:fixed; word-wrap:break-word;"
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
     for (var i = 0; i < respGetAlbumJson.length; i++) {
@@ -107,8 +108,8 @@ function prepareCellsNoActions(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
-    descriptionCell.style = "vertical-align: top; white-space: pre;"
-    descriptionCell.textContent = "Status: " + imageStatus + "\r\n\r\n" + description;
+    descriptionCell.style = "vertical-align: top; white-space: pre-wrap; word-wrap:break-word;"
+    descriptionCell.textContent = "\r\nSTATUS: " + imageStatus + "\r\n\r\nDESCRIPTION: " + description;
     const actionCell = document.createElement("td");
     actionCell.style = "vertical-align: top;"
 

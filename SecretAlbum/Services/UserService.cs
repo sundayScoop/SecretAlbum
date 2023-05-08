@@ -12,7 +12,6 @@ public interface IUserService
 {
     Point GetVerifyKey(string uid);
     bool VerifyMessage(string uid, string message, string signature, Point verifyKey);
-    string GetUserId(string userAlias);
     List<Album> GetAlbums();
     List<Image> GetUserImages(string albumId);
     List<Share> GetShares(string shareTo, string albumId);
@@ -61,15 +60,6 @@ public class UserService : IUserService
 
         return true;
     }
-
-    public string GetUserId(string userAlias)
-    {
-        Album matchingAlbum = _context.Albums
-            .First(a => a.UserAlias.Equals(userAlias));
-
-        return matchingAlbum.AlbumId;
-    }
-
 
     public List<Album> GetAlbums()
     {
@@ -203,13 +193,8 @@ public class UserService : IUserService
 
     public string ShareTo(string albumId, string imageId, string shareTo, string encKey)
     {
-        string recepientId = _context.Albums
-           .Where(a => a.UserAlias.Equals(shareTo))
-           .Select(a => a.AlbumId)
-           .ToList()[0];
-
         // check if duplicate share exists
-        var existingShare = _context.Shares.SingleOrDefault(s => s.ImageId == imageId && s.AlbumId == albumId && s.ShareTo == recepientId);
+        var existingShare = _context.Shares.SingleOrDefault(s => s.ImageId == imageId && s.AlbumId == albumId && s.ShareTo == shareTo);
         if (existingShare != null)
         {
             return "This image is already shared to the recepient.";
@@ -219,7 +204,7 @@ public class UserService : IUserService
         {
             AlbumId = albumId,
             ImageId = imageId,
-            ShareTo = recepientId,
+            ShareTo = shareTo,
             EncKey = encKey
         };
         _context.Shares.Add(newShare);

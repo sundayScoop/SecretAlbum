@@ -23,19 +23,6 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetUserId([FromQuery] string userAlias)
-        {
-            try
-            {
-                return Ok(_userService.GetUserId(userAlias));
-            }
-            catch
-            {
-                return Ok("--FAILED--");
-            }
-        }
-
-        [HttpGet]
         public IActionResult GetAlbums()
         {
             try
@@ -54,6 +41,10 @@ namespace SecretAlbum.Controllers
             if (!userAlias.All(char.IsLetterOrDigit))
             {
                 return Ok("Failed: Only alphanumeric characters are allowed in the user alias.");
+            }
+            if (userAlias.Length > 20)
+            {
+                return Ok("Failed: User alias exceeded the limit of 20 characters.");
             }
             try
             {
@@ -118,7 +109,7 @@ namespace SecretAlbum.Controllers
         {
             if (description.Length > 300)
             {
-                return Ok("Failed: description exceeded the limit of 300 characters.");
+                return Ok("Failed: Description exceeded the limit of 300 characters.");
             }
             try
             {

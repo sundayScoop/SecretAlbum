@@ -29,7 +29,9 @@ export async function showMyAlbum() {
     const sharesMap = new Map(sharesList);
 
     // set up the table, clear it, and populate it.
+    //Use table-layout:fixed in the table and word-wrap:break-word in the td
     var table = document.getElementById("myalbumtbl");
+    table.style = "border-collapse:collapse; table-layout:fixed; word-wrap:break-word;"
     var tbody = table.getElementsByTagName("tbody")[0];
     while (table.rows.length > 1) table.rows[1].remove();
     for (var i = 0; i < respGetImagesJson.length; i++) {
@@ -70,8 +72,8 @@ function prepareCells(description, imageStatus, tbody) {
     const row = document.createElement("tr");
     const imageCell = document.createElement("td");
     const descriptionCell = document.createElement("td");
-    descriptionCell.style = "vertical-align: top; white-space: pre;"
-    descriptionCell.textContent = "STATUS: " + imageStatus + "\r\n\r\n" + "DESCRIPTION: " + description;
+    descriptionCell.style = "vertical-align: top; white-space: pre-wrap; word-wrap:break-word;"
+    descriptionCell.textContent = "\r\nSTATUS: " + imageStatus + "\r\n\r\nDESCRIPTION: " + description;
     const actionCell = document.createElement("td");
     actionCell.style = "vertical-align: top;"
 
@@ -120,7 +122,10 @@ function createShareWithButton(text, imageId, actionCell, seed) {
     actionBtn.style = 'float: right; margin: 4px'
     actionBtn.addEventListener('click', async function () {
         const list = await getUserAliases()
-        const selectedUser = prompt(list.toString(), "Harry Potter");
+        const selectedUser = prompt(
+            "Enter the UID of the user you wish to share the image with:\n" + userListToString(list),
+            "example: dd30729027d07e04455408fcac66fa612b34838b74c726076ffeb10e1058cc01"
+        );
         if (!selectedUser) return;
         requestShareWith(imageId, selectedUser, seed);
     })
@@ -136,13 +141,17 @@ async function getUserAliases() {
     if (!resp.ok) alert("Something went wrong with uploading the image");
 
     const respText = await resp.text();
-    if (respText == "--FAILED--") {
-        alert("failed.")
-        return
-    }
     const respJson = JSON.parse(respText)
-    let list = respJson.map(({ userAlias }) => userAlias);
+    const list = respJson.map(({ userAlias, albumId }) => [userAlias, albumId]);
     return list;
+}
+
+function userListToString(list) {
+    var returnString = ""
+    for (const user of list) {
+        returnString += "\n" + user[0] + " - " + user[1]
+    }
+    return returnString
 }
 
 async function requestShareWith(imageId, shareTo, seed) {
@@ -167,11 +176,11 @@ async function requestShareWith(imageId, shareTo, seed) {
 }
 
 async function getUserPubKey(selectedUser) {
-    const respUserId = await fetch(window.location.origin + `/user/getUserId?userAlias=${selectedUser}`, {
-        method: 'GET'
-    });
-    const userId = await respUserId.text()
-    const respSim = await fetch(`https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/${userId}`);
+    // const respUserId = await fetch(window.location.origin + `/user/getUserId?userAlias=${selectedUser}`, {
+    //     method: 'GET'
+    // });
+    // const userId = await respUserId.text()
+    const respSim = await fetch(`https://new-simulator.australiaeast.cloudapp.azure.com/keyentry/${selectedUser}`);
     if (!respSim.ok) throw Error("Start Key Exchange: Could not find UID's image at simulator");
     const respSimJson = await respSim.json();
     return Point.fromB64(respSimJson.public);
