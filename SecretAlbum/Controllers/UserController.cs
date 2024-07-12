@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SecretAlbum.Services;
 using H4x2_TinySDK.Ed25519;
 using H4x2_TinySDK.Math;
+using SecretAlbum.Models;
 
 namespace SecretAlbum.Controllers
 {
@@ -36,7 +37,7 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegisterAlbum([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string userAlias)
+        public async Task<IActionResult> RegisterAlbum([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string userAlias, [FromForm] string publicKey)
         {
             if (!userAlias.All(char.IsLetterOrDigit))
             {
@@ -48,15 +49,13 @@ namespace SecretAlbum.Controllers
             }
             try
             {
-                string pubKey = await _userService.GetPubKey(albumId);
-                string[] contents = jwt.Split('.');
-                string message = contents[0];
-                string signature = contents[1];
-                if (!_userService.VerifyMessage(albumId, message, signature, Point.FromBase64(pubKey)))
+                var tideJWT = new TideJWT(jwt, true);
+                if (!tideJWT.VerifySignature(Point.FromBase64(publicKey)))
                 {
                     return Ok("Failed: Token expired or wrong verification key.");
                 }
-                string response = _userService.RegisterAlbum(albumId, userAlias, pubKey);   // save pubkey in database
+
+                string response = _userService.RegisterAlbum(albumId, userAlias, publicKey);   // save pubkey in database
                 return Ok(response);
             }
             catch
@@ -66,37 +65,11 @@ namespace SecretAlbum.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetImages([FromQuery] string albumId)
+        public IActionResult GetImages([FromQuery] string uid)
         {
             try
             {
-                return Ok(_userService.GetUserImages(albumId));
-            }
-            catch
-            {
-                return Ok("--FAILED--");
-            }
-        }
-
-        [HttpGet]
-        public IActionResult GetShares([FromQuery] string shareTo, [FromQuery] string albumId)
-        {
-            try
-            {
-                return Ok(_userService.GetShares(shareTo, albumId));
-            }
-            catch
-            {
-                return Ok("--FAILED--");
-            }
-        }
-
-        [HttpGet]
-        public IActionResult GetSharesForAlbum([FromQuery] string albumId)
-        {
-            try
-            {
-                return Ok(_userService.GetSharesForAlbum(albumId));
+                return Ok(_userService.GetUserImages(uid));
             }
             catch
             {
@@ -113,11 +86,11 @@ namespace SecretAlbum.Controllers
             }
             try
             {
-                string[] contents = jwt.Split('.');
-                string message = contents[0];
-                string signature = contents[1];
+                var tideJwt = new TideJWT(jwt, true);
+
                 Point verifyKey = _userService.GetVerifyKey(albumId);
-                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+
+                if (!tideJwt.VerifySignature(verifyKey))
                 {
                     return Ok("Failed: Token expired or wrong verification key.");
                 }
@@ -136,14 +109,15 @@ namespace SecretAlbum.Controllers
         {
             try
             {
-                string[] contents = jwt.Split('.');
-                string message = contents[0];
-                string signature = contents[1];
+                var tideJwt = new TideJWT(jwt, true);
+
                 Point verifyKey = _userService.GetVerifyKey(albumId);
-                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+
+                if (!tideJwt.VerifySignature(verifyKey))
                 {
                     return Ok("Failed: Token expired or wrong verification key.");
                 }
+
                 string response = _userService.DeleteImage(imageId);
                 return Ok(response);
             }
@@ -159,14 +133,15 @@ namespace SecretAlbum.Controllers
         {
             try
             {
-                string[] contents = jwt.Split('.');
-                string message = contents[0];
-                string signature = contents[1];
+                var tideJwt = new TideJWT(jwt, true);
+
                 Point verifyKey = _userService.GetVerifyKey(albumId);
-                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
+
+                if (!tideJwt.VerifySignature(verifyKey))
                 {
                     return Ok("Failed: Token expired or wrong verification key.");
                 }
+
                 string response = _userService.MakePublic(albumId, imageId, pubKey);
                 return Ok(response);
             }
@@ -176,29 +151,5 @@ namespace SecretAlbum.Controllers
             }
 
         }
-
-        [HttpPost]
-        public IActionResult ShareTo([FromQuery] string albumId, [FromForm] string jwt, [FromForm] string imageId, [FromForm] string shareTo, [FromForm] string encKey)
-        {
-            try
-            {
-                string[] contents = jwt.Split('.');
-                string message = contents[0];
-                string signature = contents[1];
-                Point verifyKey = _userService.GetVerifyKey(albumId);
-                if (!_userService.VerifyMessage(albumId, message, signature, verifyKey))
-                {
-                    return Ok("Failed: Token expired or wrong verification key.");
-                }
-                string response = _userService.ShareTo(albumId, imageId, shareTo, encKey);
-                return Ok(response);
-            }
-            catch
-            {
-                return Ok("--FAILED--");
-            }
-
-        }
-
     }
 }

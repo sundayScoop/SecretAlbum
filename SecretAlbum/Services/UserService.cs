@@ -7,6 +7,7 @@ using H4x2_TinySDK.Ed25519;
 using H4x2_TinySDK.Math;
 using Newtonsoft.Json;
 using System.Text;
+using SecretAlbum.Models;
 
 public interface IUserService
 {
@@ -14,14 +15,11 @@ public interface IUserService
     bool VerifyMessage(string uid, string message, string signature, Point verifyKey);
     List<Album> GetAlbums();
     List<Image> GetUserImages(string albumId);
-    List<Share> GetShares(string shareTo, string albumId);
-    List<string> GetSharesForAlbum(string albumId);
     Task<string> GetPubKey(string albumId);
     string RegisterAlbum(string albumId, string userAlias, string pubKey);
     string AddImage(string albumId, string seed, string newImageData, string description, string pubKey);
     string DeleteImage(string imageId);
     string MakePublic(string albumId, string imageId, string pubKey);
-    string ShareTo(string albumId, string imageId, string shareTo, string encKey);
 }
 
 public class UserService : IUserService
@@ -68,29 +66,14 @@ public class UserService : IUserService
             .ToList();
     }
 
-    public List<Image> GetUserImages(string albumId)
-    {
+    public List<Image> GetUserImages(string uid)
+    {   
         return _context.Images
-            .Where(e => e.AlbumId.Equals(albumId))
+            .Where(e => e.AlbumId.Equals(uid))
             .Select(e => new Image { Id = e.Id, Seed = e.Seed, PubKey = e.PubKey, Description = e.Description, EncryptedData = e.EncryptedData })
             .ToList();
     }
 
-    public List<Share> GetShares(string shareTo, string albumId)
-    {
-        return _context.Shares
-            .Where(s => s.ShareTo.Equals(shareTo) && s.AlbumId.Equals(albumId))
-            .Select(s => new Share { ImageId = s.ImageId, EncKey = s.EncKey })
-            .ToList();
-    }
-
-    public List<string> GetSharesForAlbum(string albumId)
-    {
-        return _context.Shares
-            .Where(s => s.AlbumId.Equals(albumId))
-            .Select(s => s.ImageId).Distinct()
-            .ToList();
-    }
 
     public async Task<string> GetPubKey(string albumId)
     {
@@ -189,26 +172,5 @@ public class UserService : IUserService
         }
 
         return "Successfully made public.";
-    }
-
-    public string ShareTo(string albumId, string imageId, string shareTo, string encKey)
-    {
-        // check if duplicate share exists
-        var existingShare = _context.Shares.SingleOrDefault(s => s.ImageId == imageId && s.AlbumId == albumId && s.ShareTo == shareTo);
-        if (existingShare != null)
-        {
-            return "This image is already shared to the recepient.";
-        }
-
-        Share newShare = new Share
-        {
-            AlbumId = albumId,
-            ImageId = imageId,
-            ShareTo = shareTo,
-            EncKey = encKey
-        };
-        _context.Shares.Add(newShare);
-        _context.SaveChanges();
-        return "Successfully shared.";
     }
 }

@@ -1,5 +1,3 @@
-import Point from "https://cdn.jsdelivr.net/gh/tide-foundation/Tide-h4x2-2@main/H4x2-Node/H4x2-Node/wwwroot/modules/H4x2-TideJS/Ed25519/point.js";
-import { signIn, signUp, AES, Utils, EdDSA, Hash } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
 import { canvasWidth, canvasHeight, encryptImage, verifyLogIn, processImage, getTime } from "/utils.js"
 
 export const imgInput = document.getElementById('imgfileinput')
@@ -38,18 +36,12 @@ function getNewSizeAndPlacement(width, height) {
 }
 
 export async function upload() {
-    const [uid, cvk] = verifyLogIn()
-    const timeMsg = btoa(await getTime())
-    const sig = await EdDSA.sign(timeMsg, BigInt(cvk))
-
-    // create image key and encrypt image
-    const seed = Utils.RandomBigInt();
-    const imageKey = Point.g.times(seed)
-    const encSeed = await AES.encryptData(seed.toString(), BigInt(cvk))
+    
+    const [uid, publicKey, jwt] = verifyLogIn()
 
     var ctx = uploadCanvas.getContext('2d');
     var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-    const encryptedImgString = await encryptImage(imgData, imageKey.toArray());
+    const [encryptedImgString, encryptedImgKeyString] = await encryptImage(imgData, uid);
 
     // get description
     const descriptionInput = document.getElementById('descriptioninput')
@@ -57,10 +49,10 @@ export async function upload() {
 
     // send the image and description to the server
     const form = new FormData();
-    form.append("seed", encSeed)
+    form.append("seed", encryptedImgKeyString)
     form.append("description", description)
     form.append("encryptedImg", encryptedImgString)
-    form.append("jwt", timeMsg + "." + sig)
+    form.append("jwt", jwt)
     const resp = await fetch(window.location.origin + `/user/addImage?albumId=${uid}`, {
         method: 'POST',
         body: form
@@ -69,6 +61,6 @@ export async function upload() {
         alert("Something went wrong with uploading the image.")
     }
     else {
-        alert("Request complete.")
     }
+    
 }

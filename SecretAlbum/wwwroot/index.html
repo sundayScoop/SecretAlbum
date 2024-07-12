@@ -1,8 +1,27 @@
 <!DOCTYPE html>
 <html>
 <script type="module">
-    import { signIn, signUp, AES, Utils, EdDSA } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/heimdall.js';
+    import {  TidePromise } from 'https://cdn.jsdelivr.net/gh/tide-foundation/heimdall@main/src/heimdall.js';
+    import { heimdall, idList } from "./config.js"
 
+    const vendorCallback = (userInfo) => {
+        console.log(userInfo);
+        sessionStorage.setItem("uid", userInfo.UID);
+        sessionStorage.setItem("publickey", userInfo.PublicKey);
+        return null;
+    }
+    const tidePromise = new TidePromise(vendorCallback); // a TidePromise which allows us to get the values from the FULL sign in process
+    const tideButtonAction = async (promise) => heimdall.GetCompleted(promise); // describe what we want the tide button to do
+    const tideButton = heimdall.AddTideButton(tideButtonAction, tidePromise); // returns Tide Button for you to stylise
+    tideButton.style.position = "absolute";
+    tideButton.style.left = "45%";
+    tidePromise.promise.then((vals) => {
+        console.log(vals);
+        sessionStorage.setItem("jwt", vals.TideJWT);
+        window.location.replace(window.location.origin + "/main.html#account");
+    });
+
+    /*
     document.getElementById('loginBtn').addEventListener('click', async function () {
         var user = document.getElementById('username_si').value;
         var pass = document.getElementById('password_si').value;
@@ -28,6 +47,7 @@
 
         window.location.replace(window.location.origin);
     });
+    */
 
 </script>
 <script>
@@ -57,33 +77,6 @@
             <img id="appname" src="images/logo.png" alt="Logo" height="100">
             <p>Secured with the Tide Network</p>
         </header>
-    </div>
-
-    <div id="login_form" style="text-align: center;">
-        <label for="userAlias">User Alias:</label>
-        <input type="text" id="userAlias_si" name="userAlias">
-        <br>
-        <label for="username">Username:</label>
-        <input type="text" id="username_si" name="username">
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password_si" name="password">
-        <br>
-        <button id="loginBtn">Login</button>
-        <u onclick="switchDiv()">No Account? Sign Up!</u>
-    </div>
-    <div id="signup_form" style="display: none; text-align: center;">
-        <!-- <label for="userAlias">User Alias:</label>
-        <input type="text" id="userAlias_si" name="userAlias">
-        <br> -->
-        <label for="username">Username:</label>
-        <input type="text" id="username_su" name="username">
-        <br>
-        <label for="password">Password:</label>
-        <input type="password" id="password_su" name="password">
-        <br>
-        <button id="signupBtn">Sign Up!</button>
-        <u onclick="switchDiv()">Already have an account?</u>
     </div>
 </body>
 

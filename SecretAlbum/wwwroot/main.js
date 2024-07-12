@@ -1,7 +1,6 @@
 import { verifyLogIn, registerAlbum, } from "/utils.js"
 import { showMyAlbum } from "/account.js"
 import { upload } from "/upload.js"
-import { queryAlbums, getSelectedAlbum } from "/search.js"
 
 intialize()
 
@@ -30,8 +29,3 @@ btnLogout.addEventListener('click', (click) => {
 const menuAccount = document.getElementById('accountmenu');
 menuAccount.addEventListener('click', showMyAlbum);
 
-const menuSearch = document.getElementById('searchmenu');
-menuSearch.addEventListener('click', queryAlbums);
-
-const btnSelect = document.getElementById("btnSelect");
-btnSelect.addEventListener('click', getSelectedAlbum);

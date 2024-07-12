@@ -104,11 +104,6 @@
         min-height: 100vh;
     }
 
-    #search {
-        background: var(--section2-color);
-        min-height: 100vh;
-    }
-
     @keyframes fadeIn {
         100% {
             opacity: 1
@@ -127,10 +122,6 @@
     <br>
     <a href="#upload">
         <img src="images/upload.png" alt="Upload" width="40" height="40">
-    </a>
-    <br>
-    <a href="#search" id="searchmenu">
-        <img src="images/search.png" alt="Search" width="40" height="40">
     </a>
     <br>
     <a href="#logout" id="logoutbtn">
@@ -168,27 +159,6 @@
         <button class="btn" id="uploadbtn">Upload</button>
         <br><br>
         <canvas id="imgfileoutput"></canvas>
-    </section>
-
-    <section id='search'>
-        <h2>Search Albums</h2>
-        <br>
-
-        <select id="dropdown"></select>
-        <button class="btn" id="btnSelect">View</button>
-        <br><br>
-        <h3 id="selectedalbumtext">No album selected.</h3>
-        <br>
-        <table id="viewtbl">
-            <thead>
-                <tr>
-                    <th width="350px"></th>
-                    <th width="350px"></th>
-                    <th width="100px"></th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </section>
 
 </div>
